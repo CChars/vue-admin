@@ -16,15 +16,15 @@ module.exports = {
       // in that case, we can target the `scss` syntax separately using the `scss` option
       scss: {
         prependData: `@import "~@/styles/main.scss";`
-      },
-      // pass Less.js Options to less-loader
-      less: {
-        // http://lesscss.org/usage/#less-options-strict-units `Global Variables`
-        // `primary` is global variables fields name
-        globalVars: {
-          primary: "#fff"
-        }
       }
+      // pass Less.js Options to less-loader
+      // less: {
+      //   // http://lesscss.org/usage/#less-options-strict-units `Global Variables`
+      //   // `primary` is global variables fields name
+      //   globalVars: {
+      //     primary: "#fff"
+      //   }
+      // }
     }
   }
 };
