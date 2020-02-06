@@ -41,3 +41,6 @@ export function validateCodes(value) {
   //   return false;
   // }
 }
+
+//使用export时，文件 import 需要用 { }
+//能使用多个export 引用时需要用花括号

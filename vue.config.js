@@ -26,5 +26,26 @@ module.exports = {
       //   }
       // }
     }
+  },
+
+  devServer: {
+    // open: false,
+    // host: "0.0.0.0",
+    // port: 8080,
+    // https: false,
+    // hot: true,
+    // hotOnly: false,
+    proxy: {
+      "/devapi": {
+        // 此处的写法，目的是为了 将 /api 替换成 https://www.baidu.com/
+        target: "http://www.web-jshtml.cn/productapi",
+        // 允许跨域
+        changeOrigin: true,
+        ws: true,
+        pathRewrite: {
+          "^/devapi": ""
+        }
+      }
+    }
   }
 };
