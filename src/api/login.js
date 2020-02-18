@@ -1,4 +1,4 @@
-import service from "@/utils/request.js";
+import service from "../utils/request.js";
 /**
  * 获取验证码接口
  */

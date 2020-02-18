@@ -102,13 +102,13 @@
 <script>
 import sha1 from "js-sha1";
 import { reactive, ref, onMounted } from "@vue/composition-api";
-import { GetSms, Register, Login } from "@/api/login.js";
+import { GetSms, Register } from "../../api/login.js";
 import {
   stripscript,
   validateEmail,
   validatePass,
   validateCodes
-} from "@/utils/validate.js";
+} from "../../utils/validate.js";
 
 export default {
   name: "login",
@@ -325,9 +325,11 @@ export default {
         password: sha1(ruleForm.password),
         code: ruleForm.code
       };
-      Login(requsetdata)
+      context.root.$store
+        .dispatch("app/login", requsetdata)
         .then(response => {
           let data = response.data;
+
           context.root.$message({
             showClose: true,
             message: data.message,
@@ -336,6 +338,10 @@ export default {
           //成功后返回登录页面
           // toggleMenu(menuTab[0]);
           // clearCountDown();
+          //页面跳转
+          context.root.$router.push({
+            name: "console"
+          });
           console.log("response:" + response);
         })
         .catch(error => {

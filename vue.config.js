@@ -1,5 +1,27 @@
 // vue.config.js
+// const path = require("path");
 module.exports = {
+  chainWebpack: config => {
+    const svgRule = config.module.rule("svg");
+    svgRule.uses.clear();
+    svgRule
+      .use("svg-sprite-loader")
+      .loader("svg-sprite-loader")
+      .options({
+        symbolId: "icon-[name]",
+        include: ["./src/icons"]
+      });
+  },
+  configureWebpack: config => {
+    config.resolve = {
+      //配置别名解析
+      alias: {
+        vue$: "vue/dist/vue.js"
+        // "@": path.resolve(__dirname, "./src"),
+        // "@c": path.resolve(__dirname, "./src/components")
+      }
+    };
+  },
   css: {
     loaderOptions: {
       // pass options to sass-loader
@@ -15,7 +37,7 @@ module.exports = {
       // `scss` syntax requires an semicolon at the end of a statement, while `sass` syntax requires none
       // in that case, we can target the `scss` syntax separately using the `scss` option
       scss: {
-        prependData: `@import "~@/styles/main.scss";`
+        prependData: `@import "./src/styles/main.scss";`
       }
       // pass Less.js Options to less-loader
       // less: {
@@ -38,7 +60,7 @@ module.exports = {
     proxy: {
       "/devapi": {
         // 此处的写法，目的是为了 将 /api 替换成 https://www.baidu.com/
-        target: "http://www.web-jshtml.cn/productapi",
+        target: "http://www.web-jshtml.cn/dependenciesapi/token",
         // 允许跨域
         changeOrigin: true,
         ws: true,
