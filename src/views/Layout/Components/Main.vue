@@ -2,6 +2,7 @@
   <div id="main-wrap">
     <div class="main-content">
       <div class="content"><router-view /></div>
+      <div class="setBorder"></div>
     </div>
   </div>
 </template>
@@ -47,11 +48,16 @@ export default {};
 }
 .content {
   width: 100%;
-  height: 100%;
+  // height: 100%;
   padding-top: 30px;
   padding-left: 30px;
+  padding-right: 30px;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   background-color: #fff;
+  white-space: nowrap;
+}
+.setBorder {
+  padding-top: 20px;
 }
 </style>

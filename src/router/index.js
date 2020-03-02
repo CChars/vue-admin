@@ -59,7 +59,7 @@ const routes = [
     name: "info",
     // redirect: "infoindex",
     meta: {
-      name: "信息管理",
+      name: "项目管理",
       icon: "el-icon-document"
     },
     component: Layout,
@@ -68,7 +68,7 @@ const routes = [
         path: "/infoindex",
         name: "infoindex",
         meta: {
-          name: "信息列表"
+          name: "项目列表"
         },
         component: () => import("../views/Info/index.vue")
       },
@@ -76,7 +76,7 @@ const routes = [
         path: "/infoCategory",
         name: "infoCategory",
         meta: {
-          name: "信息分类"
+          name: "项目申请"
         },
         component: () => import("../views/Info/infoCategory.vue")
       }

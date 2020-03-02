@@ -1,9 +1,307 @@
 <template>
-  <div>信息列表</div>
+  <!-- <div>项目列表</div> -->
+  <div>
+    <el-row :gutter="16">
+      <el-col :span="4">
+        <div class="label-wrap category">
+          <label for="">类型：</label>
+          <div class="wrap-content">
+            <el-select
+              v-model="value"
+              placeholder="请选择"
+              style="width: 100%;"
+            >
+              <el-option
+                v-for="item in options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              >
+              </el-option>
+            </el-select>
+          </div>
+        </div>
+      </el-col>
+
+      <el-col :span="7">
+        <div class="label-wrap date">
+          <label for="">日期: </label>
+          <div class="wrap-content">
+            <el-date-picker
+              v-model="value2"
+              type="datetimerange"
+              align="right"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :default-time="['12:00:00', '08:00:00']"
+            >
+            </el-date-picker>
+          </div>
+        </div>
+      </el-col>
+
+      <el-col :span="3">
+        <div class="label-wrap key-word">
+          <label for="">关键字: </label>
+          <div class="wrap-content">
+            <el-select v-model="search_Key" style="width: 100px;">
+              <el-option
+                v-for="item in searchOption"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              >
+              </el-option>
+            </el-select>
+          </div>
+        </div>
+      </el-col>
+
+      <el-col :span="3">
+        <!-- <el-form-item> -->
+        <el-input
+          v-model="input"
+          placeholder="请输入内容"
+          style="width: 100%"
+        ></el-input>
+        <!-- </el-form-item> -->
+      </el-col>
+
+      <el-col :span="2">
+        <!-- <el-form-item> -->
+        <el-button type="primary" style="width: 100%">搜索</el-button>
+        <!-- </el-form-item> -->
+      </el-col>
+
+      <!-- <el-col :span="3"> &nbsp;</el-col> -->
+
+      <el-col :span="2" :offset="3">
+        <el-button type="danger" style="width: 100%" @click="dialog_info = true"
+          >新增</el-button
+        >
+      </el-col>
+    </el-row>
+
+    <div class="block-space-30"></div>
+    <!-- 表格 -->
+    <el-table :data="tableData" border style="width: 100%">
+      <el-table-column type="selection" width="40"> </el-table-column>
+
+      <el-table-column prop="title" label="项目名称" width="400">
+      </el-table-column>
+      <el-table-column prop="category" label="建筑地址" width="400">
+      </el-table-column>
+      <el-table-column prop="date" label="日期" width="230"> </el-table-column>
+      <el-table-column prop="user" label="申请人" width="115">
+      </el-table-column>
+
+      <el-table-column prop="name" label="操作">
+        <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="info"
+            @click="
+              handleLook(scope.$index, scope.row);
+              look_dialog_info.dialog_info_1 = true;
+            "
+            >进度</el-button
+          >
+          <el-button
+            size="mini"
+            type="success"
+            @click="handleEdit(scope.$index, scope.row)"
+            >编辑</el-button
+          >
+          <el-button
+            size="mini"
+            type="danger"
+            @click="handleDelete(scope.$index, scope.row)"
+            >删除</el-button
+          >
+        </template></el-table-column
+      >
+    </el-table>
+
+    <div class="block-space-30"></div>
+
+    <!-- 底部分页 -->
+    <el-row>
+      <el-col :span="12">
+        <el-button size="mini">批量删除</el-button>
+      </el-col>
+      <el-col :span="12">
+        <el-pagination
+          class="pull-right"
+          background
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :page-sizes="[10, 20, 30]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="1000"
+        >
+        </el-pagination>
+      </el-col>
+    </el-row>
+
+    <div class="block-space-30"></div>
+    <!-- dialog弹窗 -->
+    <DialogInfo :flag.sync="dialog_info" />
+    <StateDialog :flag.sync="look_dialog_info" />
+  </div>
 </template>
 
 <script>
-export default {};
+import { reactive, ref } from "@vue/composition-api";
+import DialogInfo from "./dialog/info.vue";
+import StateDialog from "./dialog/state.vue";
+export default {
+  name: "infoIndex",
+  components: { DialogInfo, StateDialog },
+  setup(props, { root }) {
+    const options = reactive([
+      {
+        value: 1,
+        label: "黄金糕"
+      },
+      {
+        value: 2,
+        label: "双皮奶"
+      },
+      {
+        value: 3,
+        label: "蚵仔煎"
+      },
+      {
+        value: 4,
+        label: "龙须面"
+      }
+    ]);
+    const searchOption = reactive([
+      {
+        value: "id",
+        label: "ID"
+      },
+      {
+        value: "title",
+        label: "标题"
+      }
+    ]);
+    //表格数据
+    const tableData = reactive([
+      {
+        title: "hoidhfioahsiohiOA的花费ID哦安徽的否的飞的凤凰哈大幅度",
+        category: "王小虎",
+        date: "上海市普陀区金沙江路 1518 弄",
+        user: "管理员"
+      },
+      {
+        title: "hoidhfioahsiohiOA的花费ID哦安徽的否的飞的凤凰哈大幅度",
+        category: "王小虎",
+        date: "上海市普陀区金沙江路 1518 弄",
+        user: "管理员"
+      },
+      {
+        title: "hoidhfioahsiohiOA的花费ID哦安徽的否的飞的凤凰哈大幅度",
+        category: "王小虎",
+        date: "上海市普陀区金沙江路 1518 弄",
+        user: "管理员"
+      }
+    ]);
+    const value = ref("");
+    const value2 = ref("");
+    const search_Key = ref("id");
+    const input = ref("");
+    const dialog_info = ref(false);
+
+    const look_dialog_info = reactive({
+      dialog_info_1: false,
+      dialog_info_2: 1
+    });
+
+    const handleLook = (index, row) => {
+      console.log(index, row);
+      console.log(look_dialog_info);
+      console.log("dialog_info_1");
+      console.log(look_dialog_info.dialog_info_1);
+    };
+
+    const handleEdit = (index, row) => {
+      console.log(index, row);
+    };
+    const handleDelete = (index, row) => {
+      console.log(index, row);
+
+      root
+        .$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+          center: true
+        })
+        .then(() => {
+          root.$message({
+            type: "success",
+            message: "删除成功!"
+          });
+        })
+        .catch(() => {
+          root.$message({
+            type: "info",
+            message: "已取消删除"
+          });
+        });
+    };
+    // 分页配置函数
+    const handleSizeChange = val => {
+      console.log(`每页 ${val} 条`);
+    };
+    const handleCurrentChange = val => {
+      console.log(`当前页: ${val}`);
+    };
+    const closeDialog = () => {
+      dialog_info.value = false;
+    };
+    return {
+      options,
+      value,
+      value2,
+      searchOption,
+      search_Key,
+      tableData,
+      input,
+      dialog_info,
+      handleEdit,
+      handleDelete,
+      handleSizeChange,
+      handleCurrentChange,
+      closeDialog,
+      look_dialog_info,
+      handleLook
+    };
+  }
+};
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@import "../../styles/config.scss";
+.el-row {
+  margin-bottom: 20px;
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+.el-col {
+  border-radius: 4px;
+}
+.label-wrap {
+  &.category {
+    @include labelDom(left, 60, 40);
+  }
+  &.date {
+    @include labelDom(center, 90, 40);
+  }
+  &.key-word {
+    @include labelDom(center, 90, 40);
+  }
+}
+</style>
