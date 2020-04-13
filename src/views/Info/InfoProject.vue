@@ -84,15 +84,28 @@
 
     <div class="block-space-30"></div>
     <!-- 表格 -->
-    <el-table :data="tableData" border style="width: 100%">
+    <el-table
+      :data="tableData.item"
+      border
+      style="width: 100%"
+      v-loading="loading"
+    >
       <el-table-column type="selection" width="40"> </el-table-column>
 
-      <el-table-column prop="title" label="项目名称" width="400">
+      <el-table-column prop="projectName" label="项目名称" width="380">
+        <template slot-scope="scope">
+          <router-link v-bind:to="'/Info/newBuild/' + scope.row.projectId">
+            {{ scope.row.projectName }}</router-link
+          >
+        </template>
       </el-table-column>
-      <el-table-column prop="category" label="建筑地址" width="400">
+      <el-table-column prop="projectAddress" label="建筑地址" width="400">
       </el-table-column>
-      <el-table-column prop="date" label="日期" width="230"> </el-table-column>
-      <el-table-column prop="user" label="申请人" width="115">
+      <el-table-column prop="worker" label="负责人员" width="230">
+      </el-table-column>
+      <!-- <el-table-column label="申请人" width="115">-->
+      <el-table-column label="申请人" width="250">
+        {{ username }}
       </el-table-column>
 
       <el-table-column prop="name" label="操作">
@@ -127,7 +140,7 @@
     <!-- 底部分页 -->
     <el-row>
       <el-col :span="12">
-        <el-button size="mini">批量删除</el-button>
+        <el-button size="mini" @click="deleteAll">批量删除</el-button>
       </el-col>
       <el-col :span="12">
         <el-pagination
@@ -137,7 +150,7 @@
           @current-change="handleCurrentChange"
           :page-sizes="[10, 20, 30]"
           layout="total, sizes, prev, pager, next, jumper"
-          :total="1000"
+          :total="tableData.item.length"
         >
         </el-pagination>
       </el-col>
@@ -151,13 +164,34 @@
 </template>
 
 <script>
-import { reactive, ref } from "@vue/composition-api";
+import { reactive, ref, onMounted, computed } from "@vue/composition-api";
 import DialogInfo from "./dialog/info.vue";
 import StateDialog from "./dialog/state.vue";
+
+import { GetProject } from "../../api/project.js";
+
+// import VueRouter from "vue-router";
+
+// import App from "../../App.vue";
+import { global } from "../../utils/global_3.0.js";
+
 export default {
   name: "infoIndex",
   components: { DialogInfo, StateDialog },
+
   setup(props, { root }) {
+    const { confirm } = global();
+    const username = computed(() => root.$store.state.app.username);
+    const loading = ref(true);
+    // const User = {
+    //   props: ["id"],
+    //   template: "<div>User {{ id }}</div>"
+    // };
+    // const router = new VueRouter({
+    //   routes: [{ path: "/user/:id", component: User }]
+    // });
+    // App.use(router);
+
     const options = reactive([
       {
         value: 1,
@@ -187,26 +221,9 @@ export default {
       }
     ]);
     //表格数据
-    const tableData = reactive([
-      {
-        title: "hoidhfioahsiohiOA的花费ID哦安徽的否的飞的凤凰哈大幅度",
-        category: "王小虎",
-        date: "上海市普陀区金沙江路 1518 弄",
-        user: "管理员"
-      },
-      {
-        title: "hoidhfioahsiohiOA的花费ID哦安徽的否的飞的凤凰哈大幅度",
-        category: "王小虎",
-        date: "上海市普陀区金沙江路 1518 弄",
-        user: "管理员"
-      },
-      {
-        title: "hoidhfioahsiohiOA的花费ID哦安徽的否的飞的凤凰哈大幅度",
-        category: "王小虎",
-        date: "上海市普陀区金沙江路 1518 弄",
-        user: "管理员"
-      }
-    ]);
+    const tableData = reactive({
+      item: []
+    });
     const value = ref("");
     const value2 = ref("");
     const search_Key = ref("id");
@@ -215,8 +232,23 @@ export default {
 
     const look_dialog_info = reactive({
       dialog_info_1: false,
-      dialog_info_2: 1
+      dialog_info_2: 3
     });
+
+    //向后端请求用户已经申请的项目
+    const getProjects = () => {
+      GetProject()
+        .then(Response => {
+          console.log("response");
+          console.log(Response);
+          tableData.item = Response.data;
+          loading.value = false;
+          // let data = Response.data;
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    };
 
     const handleLook = (index, row) => {
       console.log(index, row);
@@ -227,30 +259,38 @@ export default {
 
     const handleEdit = (index, row) => {
       console.log(index, row);
+      // let a = "/user/" + 1;
+      // root.$router.push(a);
     };
-    const handleDelete = (index, row) => {
-      console.log(index, row);
 
-      root
-        .$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning",
-          center: true
-        })
-        .then(() => {
-          root.$message({
-            type: "success",
-            message: "删除成功!"
-          });
-        })
-        .catch(() => {
-          root.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
+    //单个删除
+    const handleDelete = (index, row) => {
+      // console.log(index, row);
+      confirm({
+        content: "此操作将永久删除该文件, 是否继续?",
+        index: index,
+        row: row,
+        function: infoDelete
+      });
     };
+    //批量删除
+    const deleteAll = () => {
+      // console.log(index, row);
+      confirm({
+        content: "删除全部已选择项目, 是否继续?",
+        index: "",
+        row: "",
+        function: infoDelete
+      });
+    };
+    //删除的信息弹窗
+    const infoDelete = (type, message) => {
+      root.$message({
+        type: type,
+        message: message
+      });
+    };
+
     // 分页配置函数
     const handleSizeChange = val => {
       console.log(`每页 ${val} 条`);
@@ -261,8 +301,18 @@ export default {
     const closeDialog = () => {
       dialog_info.value = false;
     };
+
+    /**
+     * 生命周期
+     */
+    onMounted(() => {
+      getProjects();
+    });
+
     return {
+      username,
       options,
+      loading,
       value,
       value2,
       searchOption,
@@ -272,6 +322,7 @@ export default {
       dialog_info,
       handleEdit,
       handleDelete,
+      deleteAll,
       handleSizeChange,
       handleCurrentChange,
       closeDialog,

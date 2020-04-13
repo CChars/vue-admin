@@ -1,6 +1,6 @@
 <template>
   <div id="login">
-    <div id="login-wrap">
+    <div class="login-wrap">
       <ul class="menu-tab">
         <li
           :class="{ current: item.current }"
@@ -37,7 +37,7 @@
             id="password"
             v-model="ruleForm.password"
             autocomplete="off"
-            minlength="6"
+            minlength="3"
             maxlength="20"
           >
           </el-input>
@@ -59,7 +59,7 @@
           ></el-input>
         </el-form-item>
 
-        <el-form-item prop="code" class="item-form">
+        <!-- <el-form-item prop="code" class="item-form">
           <label for="code">验证码</label>
 
           <el-row :gutter="20">
@@ -70,9 +70,9 @@
                 minlength="6"
                 maxlength="6"
               ></el-input>
-            </el-col>
+            </el-col> -->
 
-            <el-col :span="8">
+        <!-- <el-col :span="8">
               <el-button
                 type="success"
                 class="block"
@@ -82,11 +82,11 @@
               >
             </el-col>
           </el-row>
-        </el-form-item>
+        </el-form-item> -->
 
         <el-form-item>
           <el-button
-            type="danger"
+            type="primary"
             @click="submitForm('ruleForm')"
             class="block"
             :disabled="loginButtonStatus"
@@ -100,14 +100,14 @@
 </template>
 
 <script>
-import sha1 from "js-sha1";
+// import sha1 from "js-sha1";
 import { reactive, ref, onMounted } from "@vue/composition-api";
-import { GetSms, Register } from "../../api/login.js";
+import { Register } from "../../api/login.js";
 import {
   stripscript,
-  validateEmail,
-  validatePass,
-  validateCodes
+  validateEmail
+  // validatePass,
+  // validateCodes
 } from "../../utils/validate.js";
 
 export default {
@@ -135,12 +135,15 @@ export default {
 
       if (value === "") {
         callback(new Error("请输入密码"));
-      } else if (validatePass(value)) {
-        callback(
-          new Error("请输入至少6位包含1个大写字母，1个小写字母和1个数字!")
-        );
-      } else {
+      }
+      //  else if (validatePass(value)) {
+      //   callback(
+      //     new Error("请输入至少6位包含1个大写字母，1个小写字母和1个数字!")
+      //   );
+      // }
+      else {
         callback();
+        loginButtonStatus.value = false;
       }
     };
 
@@ -163,19 +166,19 @@ export default {
       }
     };
     //验证验证码
-    let checkCode = (rule, value, callback) => {
-      // console.log("1" + value);
-      ruleForm.code = stripscript(value);
-      value = ruleForm.code;
-      console.log(value);
-      if (value === "") {
-        return callback(new Error("验证码不能为空"));
-      } else if (validateCodes(value)) {
-        return callback(new Error("验证码格式不正确"));
-      } else {
-        callback();
-      }
-    };
+    // let checkCode = (rule, value, callback) => {
+    //   // console.log("1" + value);
+    //   ruleForm.code = stripscript(value);
+    //   value = ruleForm.code;
+    //   console.log(value);
+    //   if (value === "") {
+    //     return callback(new Error("验证码不能为空"));
+    //   } else if (validateCodes(value)) {
+    //     return callback(new Error("验证码格式不正确"));
+    //   } else {
+    //     callback();
+    //   }
+    // };
 
     /**
      *声明数据
@@ -217,8 +220,8 @@ export default {
     const rules = reactive({
       username: [{ validator: validateUsername, trigger: "blur" }],
       password: [{ validator: validatePassword, trigger: "blur" }],
-      passwords: [{ validator: validatePasswords, trigger: "blur" }],
-      code: [{ validator: checkCode, trigger: "blur" }]
+      passwords: [{ validator: validatePasswords, trigger: "blur" }]
+      // code: [{ validator: checkCode, trigger: "blur" }]
     });
 
     /**
@@ -265,65 +268,66 @@ export default {
     };
 
     //获取验证码
-    const getSms = () => {
-      //请求接口之前要判断邮箱是否为空 格式是否正确
-      if (ruleForm.username == "") {
-        context.root.$message({
-          showClose: true,
-          message: "邮箱不能为空！！！",
-          type: "error"
-        });
-        return false;
-      }
+    // const getSms = () => {
+    //   //请求接口之前要判断邮箱是否为空 格式是否正确
+    //   if (ruleForm.username == "") {
+    //     context.root.$message({
+    //       showClose: true,
+    //       message: "邮箱不能为空！！！",
+    //       type: "error"
+    //     });
+    //     return false;
+    //   }
 
-      if (validateEmail(ruleForm.username)) {
-        context.root.$message({
-          showClose: true,
-          message: "邮箱格式有误！！！",
-          type: "error"
-        });
-        return false;
-      }
+    //   if (validateEmail(ruleForm.username)) {
+    //     context.root.$message({
+    //       showClose: true,
+    //       message: "邮箱格式有误！！！",
+    //       type: "error"
+    //     });
+    //     return false;
+    //   }
 
-      // codeButtonStatus.value = true;
-      codeButtonStatus.status = true;
-      codeButtonStatus.txt = "发送中";
+    //   // codeButtonStatus.value = true;
+    //   codeButtonStatus.status = true;
+    //   codeButtonStatus.txt = "发送中";
 
-      let requestdata = {
-        username: ruleForm.username,
-        module: model.value
-      };
-      //调用定时器 倒计时
-      setTimeout(() => {
-        //请求接口 获取验证码;
-        GetSms(requestdata)
-          .then(response => {
-            let data = response.data;
+    //   let requestdata = {
+    //     username: ruleForm.username,
+    //     module: model.value
+    //   };
+    //   //调用定时器 倒计时
+    //   setTimeout(() => {
+    //     //请求接口 获取验证码;
+    //     GetSms(requestdata)
+    //       .then(response => {
+    //         let data = response.data;
 
-            console.log(data);
+    //         console.log(data);
 
-            context.root.$message({
-              showClose: true,
-              message: data.message,
-              type: "success"
-            });
-            //d登录注册按钮状态改变
-            loginButtonStatus.value = false;
-            //调用定时器，倒计时
-            countDown(60);
-          })
-          .catch(error => {
-            console.log(error);
-          });
-      }, 3000);
-    };
+    //         context.root.$message({
+    //           showClose: true,
+    //           message: data.message,
+    //           type: "success"
+    //         });
+    //         //d登录注册按钮状态改变
+    //         loginButtonStatus.value = false;
+    //         //调用定时器，倒计时
+    //         countDown(60);
+    //       })
+    //       .catch(error => {
+    //         console.log(error);
+    //       });
+    //   }, 3000);
+    // };
 
     //登录
     const login = () => {
       let requsetdata = {
         username: ruleForm.username,
-        password: sha1(ruleForm.password),
-        code: ruleForm.code
+        // password: sha1(ruleForm.password)
+        password: ruleForm.password
+        // code: ruleForm.code
       };
       context.root.$store
         .dispatch("app/login", requsetdata)
@@ -332,15 +336,17 @@ export default {
 
           context.root.$message({
             showClose: true,
-            message: data.message,
+            message: data.msg,
             type: "success"
           });
+          console.log(11111111111111111111111111111111111111111111111111);
           //成功后返回登录页面
           // toggleMenu(menuTab[0]);
           // clearCountDown();
           //页面跳转
           context.root.$router.push({
-            name: "console"
+            // name: "console"
+            path: "/console/index"
           });
           console.log("response:" + response);
         })
@@ -352,9 +358,11 @@ export default {
     const register = () => {
       let requsetdata = {
         username: ruleForm.username,
-        password: sha1(ruleForm.password),
-        code: ruleForm.code,
-        module: "register"
+        // password: sha1(ruleForm.password),
+        password: ruleForm.password
+
+        // code: ruleForm.code,
+        // module: "register"
       };
       //注册接口
       Register(requsetdata)
@@ -409,7 +417,7 @@ export default {
       toggleMenu,
       countDown,
       clearCountDown,
-      getSms,
+      // getSms,
       login,
       register,
       submitForm
@@ -422,13 +430,22 @@ export default {
 
 <style lang="scss" scoped>
 #login {
-  height: 100vh;
-  background-color: burlywood;
+  height: 100%;
+  // background-color: rgb(224, 4, 4);
 }
 
 .login-wrap {
-  width: 50%;
-  margin: auto;
+  width: 370px;
+  // margin: auto;
+  border-radius: 15px;
+  background-clip: padding-box;
+  margin: 180px auto;
+  width: 500px;
+  padding: 10px 35px 25px 35px;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 0 25px #cac6c6;
+  background-color: white;
 }
 
 .menu-tab {
@@ -438,7 +455,7 @@ export default {
     width: 88px;
     line-height: 36px;
     font-size: 14px;
-    color: white;
+    color: black;
     border-radius: 2px;
     cursor: pointer;
   }
@@ -450,14 +467,14 @@ export default {
 
 .el-form {
   margin: auto;
-  width: 20%;
+  // width: 20%;
 }
 
 .login-form {
   label {
     display: block;
     font-size: 14px;
-    color: white;
+    color: black;
   }
 }
 .item-form {

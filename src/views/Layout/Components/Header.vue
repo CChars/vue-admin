@@ -25,12 +25,14 @@ export default {
       root.$store.dispatch("app/exit").then(() => {
         //退出成功后返回登录页面
         //页面跳转
+        root.$store.commit("route/CLEAN_ROUTE");
         root.$router.push({ name: "login" });
         root.$message({
           showClose: true,
           message: "退出成功",
           type: "success"
         });
+        console.log(root.$store.state.route.route);
       });
     };
     return {

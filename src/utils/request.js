@@ -3,7 +3,7 @@ import { Message } from "element-ui";
 
 //创建axios  赋给变量service
 // 地址http://www.web-jshtml.cn/productApi
-const BASEURL = process.env.NODE_ENV === "production" ? "" : "/devapi";
+const BASEURL = process.env.NODE_ENV === "production" ? "" : "";
 
 const service = axios.create({
   baseURL: BASEURL,
@@ -21,7 +21,7 @@ service.interceptors.request.use(
     // 在发送请求之前做些什么
     //后台需要前端这边传递相关参数
     //如 tokey
-    //config.headers["tokey"] = "1233333"
+    //config.headers["token"] = "1233333"
     return config;
   },
   function(error) {
@@ -40,8 +40,8 @@ service.interceptors.response.use(
     // 对响应数据做点什么
     let data = response.data;
 
-    if (data.resCode !== 0) {
-      Message.error(data.message);
+    if (response.status && response.status === 200 && data.status === 500) {
+      Message.error(data.msg);
       return Promise.reject(data);
     } else {
       return response;

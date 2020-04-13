@@ -19,17 +19,39 @@ export function GetSms(data) {
 export function Login(data) {
   return service.request({
     method: "post",
-    url: "/login/",
-    data
+    url: "/doLogin",
+    data: data,
+    // json to key-value
+    transformRequest: [
+      data => {
+        let ret = "";
+        for (let i in data) {
+          ret +=
+            encodeURIComponent(i) + "=" + encodeURIComponent(data[i]) + "&";
+        }
+        return ret;
+      }
+    ]
   });
 }
+
 /**
- * 注册
+ * 注册接口
  */
 export function Register(data) {
   return service.request({
     method: "post",
-    url: "/register/",
+    url: "",
     data
+  });
+}
+
+/**
+ * 注册接口
+ */
+export function Logout() {
+  return service.request({
+    method: "get",
+    url: "/logout"
   });
 }

@@ -7,10 +7,18 @@ import store from "./store";
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
 import "./icons";
+//路由守卫
 import "./router/promit.js";
+//定义全局方法
+// import global from "./utils/global.js";
 //自定义全局组件
 Vue.use(ElementUI);
+// Vue.use(global);
 Vue.use(VueCompositionApi);
+
+// import VueRouter from "vue-router";
+
+// Vue.use(VueRouter);
 
 Vue.config.productionTip = false;
 

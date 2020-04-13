@@ -13,8 +13,8 @@
         <el-submenu v-if="!item.hidden" :key="item.id" :index="index + ''">
           <!-- 一级菜单 -->
           <template slot="title">
-            <i :class="item.meta.icon"></i>
-            <span>{{ item.meta.name }}</span>
+            <i :class="item.icon"></i>
+            <span>{{ item.name }}</span>
           </template>
 
           <!-- 二级菜单 -->
@@ -22,7 +22,7 @@
             v-for="subItem in item.children"
             :key="subItem.id"
             :index="subItem.path"
-            >{{ subItem.meta.name }}</el-menu-item
+            >{{ subItem.name }}</el-menu-item
           >
           <!-- <el-menu-item index="1-2">选项2</el-menu-item> -->
         </el-submenu>
@@ -33,15 +33,18 @@
 </template>
 
 <script>
-import { reactive, computed } from "@vue/composition-api";
+import { computed } from "@vue/composition-api";
 export default {
   name: "navMenu",
   setup(props, { root }) {
     /**
      * data数据
      */
-    const routers = reactive(root.$router.options.routes);
+    // const routers = reactive(root.$router.options.routes);
+    const routers = computed(() => root.$store.state.route.route);
     // const isCollapse = ref(true);
+    // console.log(2222222222222222);
+    // console.log(routers);
     /**
      * computed: {},监听
      */

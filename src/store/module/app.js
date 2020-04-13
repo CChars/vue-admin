@@ -1,6 +1,7 @@
 import { Login } from "../../api/login.js";
+import { Logout } from "../../api/login.js";
 import {
-  setToken,
+  // setToken,
   removeToken,
   setUsername,
   getUsername,
@@ -28,7 +29,6 @@ const mutations = {
 
     //html5本地存储 存储比较简单的东西 小的交互
     sessionStorage.setItem("isCollapse", JSON.stringify(state.isCollapse));
-
     //浏览器存储（密码等）
     // localStorage.setItem("isCollapse", JSON.stringify(state.isCollapse));
 
@@ -49,13 +49,16 @@ const actions = {
     return new Promise((resolve, reject) => {
       Login(requestData)
         .then(Response => {
-          let data = Response.data.data;
+          let data = Response.data;
           //在 vuex 中存储 token 和username
           //普通方式  也可以用结构方式
-          content.commit("SET_TOKEN", data.token);
-          content.commit("SET_USERNAME", data.username);
-          setToken(data.token);
-          setUsername(data.username);
+          // content.commit("SET_TOKEN", data.token);
+          window.sessionStorage.setItem("user", JSON.stringify(data.obj));
+
+          content.commit("SET_USERNAME", data.obj.account);
+
+          // setToken(data.token);
+          setUsername(data.obj.account);
           resolve(Response);
         })
         .catch(error => {
@@ -65,12 +68,22 @@ const actions = {
   },
   //退出方法  ({commit})为结构写法
   exit({ commit }) {
-    return new Promise(resolve => {
-      removeToken();
-      removeUsername();
-      commit("SET_TOKEN", "");
-      commit("SET_USERNAME", "");
-      resolve();
+    return new Promise((resolve, reject) => {
+      Logout()
+        .then(Response => {
+          window.sessionStorage.removeItem("user", "");
+          removeToken();
+          removeUsername();
+          commit("SET_TOKEN", "");
+          commit("SET_USERNAME", "");
+          //退出后将router清空
+          // commit("INIT_ROUTE", []);
+          resolve(Response);
+          console.log(Response);
+        })
+        .catch(error => {
+          reject(error);
+        });
     });
   }
 };

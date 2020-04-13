@@ -53,8 +53,8 @@ export default {
 
     //watch
     watch(() => {
-      console.log("1234");
-      console.log(props.flag.dialog_info_1);
+      // console.log("1234");
+      // console.log(props.flag.dialog_info_1);
 
       dialog_info_flag.value = props.flag.dialog_info_1;
       active_flag.value = props.flag.dialog_info_2;

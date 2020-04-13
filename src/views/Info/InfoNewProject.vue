@@ -1,6 +1,18 @@
 <template>
   <div>
+    <span> 路由： {{ $route.query.id }}</span>
     <div class="project">
+      <div style="padding-left: 30px; padding-top: 20px">
+        <el-form>
+          <el-form-item>
+            <label for="" style="font-size:16px"
+              >填写以下信息点击立即创建来申请项目</label
+            >
+            <el-divider></el-divider>
+          </el-form-item>
+        </el-form>
+      </div>
+
       <el-form
         ref="projectForm"
         :inline="true"
@@ -27,7 +39,20 @@
         </el-form-item>
       </el-form>
     </div>
+    <!-- <el-divider></el-divider> -->
+
     <div class="building">
+      <div style="padding-left: 30px; padding-top: 20px">
+        <el-form>
+          <el-form-item>
+            <label for="" style="font-size:16px "
+              >填写详细数据来完善该项目建筑信息</label
+            >
+            <el-divider></el-divider>
+          </el-form-item>
+        </el-form>
+      </div>
+
       <el-form
         :model="ruleForm"
         :rules="buildingrules"
@@ -231,14 +256,23 @@ export default {
 .el-col {
   border-radius: 4px;
 }
+// .project {
+//   border-bottom: 2px solid rgb(185, 182, 182);
+//   // border-bottom-color: rgb(12, 12, 12);
+//   padding-bottom: 30px;
+// }
 .project {
-  border-bottom: 2px solid rgb(185, 182, 182);
-  // border-bottom-color: rgb(12, 12, 12);
-  padding-bottom: 30px;
+  background-color: #fff;
+  border-radius: 20px;
+  padding-right: 25px;
 }
 .building {
-  padding-top: 30px;
+  margin-top: 30px;
+  // padding-top: 30px;
   padding-bottom: 50px;
+  background-color: #fff;
+  border-radius: 20px;
+  padding-right: 25px;
 }
 .center {
   text-align: center;

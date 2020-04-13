@@ -54,7 +54,7 @@ export default {};
   padding-right: 30px;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  background-color: #fff;
+  // background-color: #fff;
   white-space: nowrap;
 }
 .setBorder {
