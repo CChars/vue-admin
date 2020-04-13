@@ -3,25 +3,34 @@
     <el-tab-pane label="待分配项目" name="first">
       <div class="block">
         <el-timeline
-          v-for="(project, index) in tableData.item"
+          v-for="(project, index) in cardData.item"
           :key="project.projectId"
+          v-loading="loading"
         >
-          <el-timeline-item timestamp="2018/4/12" placement="top">
+          <el-timeline-item
+            v-if="!project.workerID"
+            timestamp="2018/4/12"
+            placement="top"
+          >
             <el-card>
               <h4>{{ project.projectName }}</h4>
               <p>{{ project.projectAddress }}</p>
 
               <el-form
                 :inline="true"
-                :model="formInline.workers[index][0]"
+                :model="formInline.workers[index]"
                 class="demo-form-inline"
               >
                 <el-form-item label="审批人" :disabled="true">
-                  <el-input v-model="username" placeholder="审批人"></el-input>
+                  <el-input
+                    v-model="formInline.workers[index].adminUser"
+                    placeholder="审批人"
+                    >{{ username }}</el-input
+                  >
                 </el-form-item>
                 <el-form-item label="检测人员">
                   <el-select
-                    v-model="formInline.workers[index][0].workerID"
+                    v-model="formInline.workers[index].workerID"
                     placeholder="请选择检测人员"
                   >
                     <!-- <el-option label="区域一" value="shanghai"></el-option>
@@ -131,7 +140,12 @@
 
         <div class="block-space-30"></div>
         <!-- 表格 -->
-        <el-table :data="tableData.item" border style="width: 100%">
+        <el-table
+          :data="tableData.item"
+          border
+          style="width: 100%"
+          v-loading="loadingTable"
+        >
           <el-table-column type="selection" width="40"> </el-table-column>
 
           <el-table-column prop="projectName" label="项目名称" width="400">
@@ -194,7 +208,13 @@
 </template>
 
 <script>
-import { reactive, ref, onMounted, computed } from "@vue/composition-api";
+import {
+  reactive,
+  ref,
+  onMounted,
+  computed,
+  onBeforeMount
+} from "@vue/composition-api";
 import DialogInfo from "./dialog/info.vue";
 import StateDialog from "./dialog/state.vue";
 
@@ -214,6 +234,8 @@ export default {
   setup(props, { root }) {
     const { confirm } = global();
 
+    const loading = ref(true);
+    const loadingTable = ref(true);
     // const User = {
     //   props: ["id"],
     //   template: "<div>User {{ id }}</div>"
@@ -225,24 +247,19 @@ export default {
 
     const formInline = reactive({
       workers: [
-        // [
+        //   {
+        //     adminUser: "",
+        //     workerID: ""
+        // },
         //   {
         //     adminUser: "",
         //     workerID: ""
         //   }
-        // ],
-        // [
+        // ,
         //   {
         //     adminUser: "",
         //     workerID: ""
         //   }
-        // ],
-        // [
-        //   {
-        //     adminUser: "",
-        //     workerID: ""
-        //   }
-        // ]
       ]
     });
 
@@ -277,6 +294,10 @@ export default {
     const tableData = reactive({
       item: []
     });
+    //卡片数据
+    const cardData = reactive({
+      item: []
+    });
     const value = ref("");
     const value2 = ref("");
     const search_Key = ref("id");
@@ -289,13 +310,15 @@ export default {
     });
 
     const onSubmitForWorker = (index, projectId) => {
-      console.log(options);
+      // console.log(options);
       console.log(index);
+      console.log("projectId");
       console.log(projectId);
-      console.log(formInline.workers[index][0]);
-      const workerId = formInline.workers[index][0].workerID;
+      console.log("workerId");
+      console.log(formInline.workers[index]);
+      const workerId = formInline.workers[index].workerID;
 
-      putSetWorkerRequest(projectId, workerId)
+      SetWorkerRequest(projectId, workerId);
     };
     // const toDetail = () => {
     //   console.log("为此项目分配人员");
@@ -355,28 +378,50 @@ export default {
     const closeDialog = () => {
       dialog_info.value = false;
     };
+    //将有workerId的项目收集起来就是已分配项目
+    const setTableData = oldData => {
+      tableData.item = [];
+      oldData.forEach(project => {
+        if (project.workerID) {
+          tableData.item.push(project);
+        }
+      });
+      loadingTable.value = false;
+      console.log("tableData.item");
+      console.log(tableData.item);
+    };
 
     //获取所有的项目
     const getAllProject = () => {
       GetAllProject()
         .then(Response => {
           console.log(Response);
-          tableData.item = Response.data;
+          cardData.item = Response.data;
           //定义分配时提交表单的格式
-          const submitInfo = reactive({
-            adminUser: "",
-            workerID: ""
-          });
-          // 每一个projet要有一个对应的提交表单  如果只用一个则，每一个项目的值都是一样的
-          for (let index = 0; index < tableData.item.length; index++) {
-            formInline.workers.push(submitInfo);
+          // const submitInfo = reactive({
+          //   adminUser: "",
+          //   workerID: ""
+          // });
+          // // 每一个projet要有一个对应的提交表单  如果只用一个则，每一个项目的值都是一样的
+          for (let index = 0; index < cardData.item.length; index++) {
+            formInline.workers.push({
+              adminUser: username.value,
+              workerID: ""
+            });
           }
+          console.log("存进去的数据");
+          console.log(formInline);
+          // console.log(formInline.workers[1]);
+          const oldData = Response.data;
+          setTableData(oldData);
+          loading.value = false;
         })
         .catch(error => {
+          loading.value = false;
           console.log(error);
         });
     };
-
+    //获取所有的检测人员用户
     const getAllWorkerRequest = () => {
       getWorkerRequest()
         .then(Response => {
@@ -387,12 +432,43 @@ export default {
           console.log(error);
         });
     };
+    //为项目分配检测人员
+    const SetWorkerRequest = (projectId, workerId) => {
+      putSetWorkerRequest(projectId, workerId)
+        .then(Response => {
+          console.log("分配返回信息");
+          console.log(Response);
+          const data = Response.data;
+          if (data.status === 200) {
+            //分配完之后再次获取一次项目列表
+            getAllProject();
+            root.$message({
+              type: "success",
+              message: data.msg
+            });
+          } else {
+            root.$message({
+              type: "error",
+              message: data.msg
+            });
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    };
 
     onMounted(() => {
-      getAllProject();
+      // getAllProject();
       getAllWorkerRequest();
     });
+    onBeforeMount(() => {
+      getAllProject();
+    });
     return {
+      // SetWorkerRequest,
+      loading,
+      loadingTable,
       username,
       options,
       value,
@@ -402,6 +478,7 @@ export default {
       formInline,
       search_Key,
       tableData,
+      cardData,
       input,
       dialog_info,
       onSubmitForWorker,
@@ -410,6 +487,7 @@ export default {
       handleEdit,
       handleDelete,
       deleteAll,
+      setTableData,
       handleSizeChange,
       handleCurrentChange,
       closeDialog,
