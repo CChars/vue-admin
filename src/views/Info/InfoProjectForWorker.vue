@@ -85,16 +85,20 @@
 
         <div class="block-space-30"></div>
         <!-- 表格 -->
-        <el-table :data="tableData" border style="width: 100%">
+        <el-table :data="tableData.item" border style="width: 100%">
           <el-table-column type="selection" width="40"> </el-table-column>
 
-          <el-table-column prop="title" label="项目名称" width="400">
+          <el-table-column prop="projectName" label="项目名称" width="400">
           </el-table-column>
-          <el-table-column prop="category" label="建筑地址" width="400">
+          <el-table-column prop="projectAddress" label="建筑地址" width="400">
           </el-table-column>
           <el-table-column prop="date" label="日期" width="230">
           </el-table-column>
-          <el-table-column prop="user" label="申请人" width="115">
+          <el-table-column
+            prop="singleUser.username"
+            label="申请人"
+            width="115"
+          >
           </el-table-column>
 
           <el-table-column prop="name" label="操作">
@@ -106,14 +110,14 @@
                   handleLook(scope.$index, scope.row);
                   look_dialog_info.dialog_info_1 = true;
                 "
-                >更新</el-button
+                >更新建筑数据</el-button
               >
-              <el-button
+              <!-- <el-button
                 size="mini"
                 type="success"
                 @click="handleEdit(scope.$index, scope.row)"
                 >编辑</el-button
-              >
+              > -->
             </template></el-table-column
           >
         </el-table>
@@ -133,7 +137,7 @@
               @current-change="handleCurrentChange"
               :page-sizes="[10, 20, 30]"
               layout="total, sizes, prev, pager, next, jumper"
-              :total="1000"
+              :total="tableData.item.length"
             >
             </el-pagination>
           </el-col>
@@ -178,9 +182,11 @@
 </template>
 
 <script>
-import { reactive, ref } from "@vue/composition-api";
+import { reactive, ref, onMounted } from "@vue/composition-api";
 import DialogInfo from "./dialog/info.vue";
 import StateDialog from "./dialog/state.vue";
+
+import { GetWorkerProject } from "../../api/project.js";
 
 // import VueRouter from "vue-router";
 
@@ -234,26 +240,9 @@ export default {
       }
     ]);
     //表格数据
-    const tableData = reactive([
-      {
-        title: "hoiOA的花费ID哦安徽的否的飞的凤凰哈大幅度",
-        category: "上海市普陀区金沙江路 1518 弄",
-        date: "2222222222222222222",
-        user: "所发生的积分"
-      },
-      {
-        title: "hhiOA的花费ID哦安徽的否的飞的凤凰哈大幅度",
-        category: "上海市普陀区金沙江路 1518 弄",
-        date: "222222222222",
-        user: "东方华府"
-      },
-      {
-        title: "hoA的花费ID哦安徽的否的飞的凤凰哈大幅度",
-        category: "上海市普陀区金沙江路 1518 弄",
-        date: "2222222",
-        user: "额吴瑞"
-      }
-    ]);
+    const tableData = reactive({
+      item: []
+    });
     const value = ref("");
     const value2 = ref("");
     const search_Key = ref("id");
@@ -333,6 +322,22 @@ export default {
     const closeDialog = () => {
       dialog_info.value = false;
     };
+
+    //获取有该检测人员标识的项目project
+    const getWorkerProject = () => {
+      GetWorkerProject()
+        .then(Response => {
+          console.log(Response);
+          tableData.item = Response.data;
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    };
+
+    onMounted(() => {
+      getWorkerProject();
+    });
     return {
       options,
       value,
