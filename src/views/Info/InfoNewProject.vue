@@ -1,56 +1,19 @@
 <template>
   <div>
-    <span> 路由： {{ $route.query.id }}</span>
-    <div class="project">
-      <div style="padding-left: 30px; padding-top: 20px">
-        <el-form>
-          <el-form-item>
-            <label for="" style="font-size:16px"
-              >填写以下信息点击立即创建来申请项目</label
-            >
-            <el-divider></el-divider>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <el-form
-        ref="projectForm"
-        :inline="true"
-        :model="sizeForm"
-        label-width="100px"
-        size="mini"
-        :rules="projectrules"
-      >
-        <!-- <el-col :span="6"> -->
-        <el-form-item label="项目名称" prop="name">
-          <el-input v-model="sizeForm.name"></el-input>
-        </el-form-item>
-        <!-- </el-col> -->
-        <!-- <el-col :span="6"> -->
-        <el-form-item label="项目地址" prop="region">
-          <el-input v-model="sizeForm.region"></el-input>
-        </el-form-item>
-        <!-- </el-col> -->
-        <el-form-item>
-          <el-button type="primary" @click="submitForm('projectForm')"
-            >立即创建</el-button
-          >
-          <el-button @click="resetForm('projectForm')">取消</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-    <!-- <el-divider></el-divider> -->
-
     <div class="building">
       <div style="padding-left: 30px; padding-top: 20px">
-        <el-form>
-          <el-form-item>
-            <label for="" style="font-size:16px "
-              >填写详细数据来完善该项目建筑信息</label
-            >
-            <el-divider></el-divider>
-          </el-form-item>
-        </el-form>
+        <el-page-header
+          @back="goBack"
+          style="margin-bottom: 15px;"
+        ></el-page-header>
+        <label for="" style="font-size:16px "
+          ><span> 为项目</span>
+          <span class="color" v-if="projectName">{{ projectName }}</span>
+          <span>上传更新建筑的详细数据</span>
+          <span> 路由： {{ $route.query.id }}</span></label
+        >
+
+        <el-divider></el-divider>
       </div>
 
       <el-form
@@ -76,18 +39,18 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="建筑状态" prop="state">
-              <el-input v-model="ruleForm.state"></el-input>
+            <el-form-item label="建筑状态" prop="satte">
+              <el-input v-model="ruleForm.satte"></el-input>
             </el-form-item>
           </el-col>
 
           <el-col :span="12">
             <el-form-item label="危险程度" prop="danger">
               <el-select v-model="ruleForm.danger" placeholder="请选择危险程度">
-                <el-option label="正常" value="normal"></el-option>
-                <el-option label="轻度" value="justSoSo"></el-option>
-                <el-option label="中等" value="medial"></el-option>
-                <el-option label="高危" value="primary"></el-option>
+                <el-option label="正常" value="正常"></el-option>
+                <el-option label="轻度" value="轻度"></el-option>
+                <el-option label="中等" value="中等"></el-option>
+                <el-option label="高危" value="高危"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -143,8 +106,8 @@
         </el-row>
 
         <el-form-item class="center">
-          <el-button type="primary" @click="submitForm('ruleForm')"
-            >立即创建</el-button
+          <el-button type="primary" @click="submitBuildForm('ruleForm')"
+            >立即新增</el-button
           >
           <el-button @click="resetForm('ruleForm')">重置</el-button>
         </el-form-item>
@@ -154,13 +117,59 @@
 </template>
 
 <script>
-import { reactive, ref } from "@vue/composition-api";
+import { reactive, ref, watch, onUnmounted } from "@vue/composition-api";
+import { PostBuild } from "../../api/project.js";
 export default {
   setup(props, { refs, root }) {
-    const submitForm = formName => {
+    const projectName = ref("");
+    const projectId = ref("");
+    //拿到存在vuex中的project信息
+    const projectInfo = watch(() => {
+      const a = root.$store.state.project.project;
+      console.log(1111111111111);
+      console.log(a);
+      projectName.value = a.projectName;
+      projectId.value = a.projectId;
+      console.log(projectId.value);
+    });
+
+    const dialogImageUrl = ref("");
+    const dialogVisible = ref(false);
+
+    const buildingrules = reactive({
+      name: [{ required: true, message: "请输入建筑名称", trigger: "blur" }],
+      danger: [
+        { required: true, message: "请选择危险等级", trigger: "change" }
+      ],
+      address: [{ required: true, message: "请输入建筑地址", trigger: "blur" }],
+      satte: [{ required: true, message: "请输入建筑状态", trigger: "blur" }],
+      length: [{ required: true, message: "请输入建筑长度", trigger: "blur" }],
+      width: [{ required: true, message: "请输入建筑宽度", trigger: "blur" }],
+      height: [{ required: true, message: "请输入建筑高度", trigger: "blur" }],
+      longitude: [
+        { required: true, message: "请输入建筑经度", trigger: "blur" }
+      ],
+      latitude: [{ required: true, message: "请输入建筑纬度", trigger: "blur" }]
+      // photo: [{ required: true, message: "请上传建筑照片", trigger: "blur" }]
+    });
+    const ruleForm = reactive({
+      name: "",
+      address: "",
+      satte: "",
+      length: "",
+      width: "",
+      height: "",
+      longitude: "",
+      latitude: "",
+      photo: ""
+    });
+
+    const submitBuildForm = formName => {
       refs[formName].validate(valid => {
         if (valid) {
-          alert("submit!");
+          console.log("formName submit!!");
+          console.log(ruleForm);
+          addBuildForProject(projectId.value, ruleForm);
         } else {
           console.log("error submit!!");
           return false;
@@ -172,10 +181,6 @@ export default {
       refs[formName].resetFields();
     };
 
-    const onSubmit = () => {
-      console.log("submit!");
-    };
-
     const handleRemove = (file, fileList) => {
       console.log(file, fileList);
     };
@@ -183,70 +188,63 @@ export default {
       root.dialogImageUrl = file.url;
       root.dialogVisible = true;
     };
-
-    const dialogImageUrl = ref("");
-    const dialogVisible = ref(false);
-
-    const projectrules = reactive({
-      name: [
-        { required: true, message: "请输入项目名称", trigger: "blur" },
-        { min: 3, max: 20, message: "长度在 3 到 20 个字符", trigger: "blur" }
-      ],
-      region: [{ required: true, message: "请输入项目地址", trigger: "blur" }]
+    //删除的信息弹窗
+    const infoUpload = (type, message) => {
+      root.$message({
+        type: type,
+        message: message
+      });
+    };
+    //向后台提交build信息
+    const addBuildForProject = (projectId, ruleForm) => {
+      console.log("formName submit!!formNameformNameformName");
+      console.log(ruleForm);
+      PostBuild(projectId, ruleForm)
+        .then(Response => {
+          console.log(Response.data);
+          refs[ruleForm].resetFields();
+          infoUpload("success", Response.data.msg);
+        })
+        .catch(error => {
+          console.log(error);
+          refs[ruleForm].resetFields();
+          infoUpload("error", Response.data.msg);
+        });
+    };
+    onUnmounted(() => {
+      console.log("组件将要卸载");
+      //在关闭之后将vuex里面的项目信息清除
+      root.$store.commit("project/CLEAN_PROJECT");
     });
-    const sizeForm = reactive({
-      name: "",
-      region: ""
-    });
-
-    const buildingrules = reactive({
-      name: [{ required: true, message: "请输入建筑名称", trigger: "blur" }],
-      danger: [
-        { required: true, message: "请选择危险等级", trigger: "change" }
-      ],
-      address: [{ required: true, message: "请输入建筑地址", trigger: "blur" }],
-      state: [{ required: true, message: "请输入建筑状态", trigger: "blur" }],
-      length: [{ required: true, message: "请输入建筑长度", trigger: "blur" }],
-      width: [{ required: true, message: "请输入建筑宽度", trigger: "blur" }],
-      height: [{ required: true, message: "请输入建筑高度", trigger: "blur" }],
-      longitude: [
-        { required: true, message: "请输入建筑经度", trigger: "blur" }
-      ],
-      latitude: [
-        { required: true, message: "请输入建筑纬度", trigger: "blur" }
-      ],
-      photo: [{ required: true, message: "请上传建筑照片", trigger: "blur" }]
-    });
-    const ruleForm = reactive({
-      name: "",
-      region: "",
-      address: "",
-      state: "",
-      length: "",
-      width: "",
-      height: "",
-      longitude: "",
-      latitude: "",
-      photo: ""
-    });
+    //返回上一层
+    const goBack = () => {
+      root.$router.go(-1); //返回上一层
+      root.$store.commit("project/CLEAN_PROJECT");
+    };
     return {
-      submitForm,
+      projectName,
+      projectInfo,
+      submitBuildForm,
       resetForm,
-      onSubmit,
       handleRemove,
       dialogImageUrl,
       handlePictureCardPreview,
       dialogVisible,
       buildingrules,
-      projectrules,
+      // projectrules,
       ruleForm,
-      sizeForm
+      // sizeForm,
+      goBack
     };
   }
 };
 </script>
 
 <style lang="scss" scoped>
+.color {
+  // color: blue;
+  font-weight: 700;
+}
 .el-row {
   margin-bottom: 20px;
   &:last-child {
@@ -256,11 +254,6 @@ export default {
 .el-col {
   border-radius: 4px;
 }
-// .project {
-//   border-bottom: 2px solid rgb(185, 182, 182);
-//   // border-bottom-color: rgb(12, 12, 12);
-//   padding-bottom: 30px;
-// }
 .project {
   background-color: #fff;
   border-radius: 20px;

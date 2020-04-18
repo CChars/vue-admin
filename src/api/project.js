@@ -58,10 +58,10 @@ export function PostProject(data) {
 /**
  * 新增build接口
  */
-export function PostBuild(data) {
+export function PostBuild(projectId, data) {
   return service.request({
     method: "post",
-    url: "",
+    url: "/info/project/build/?projectId=" + projectId,
     data
     // data: data //左边data为后台接受的 变量名（key），右边data是参数（value） 两者同名可一些一个
   });

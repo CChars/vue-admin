@@ -4,13 +4,13 @@ import Vuex from "vuex";
 Vue.use(Vuex);
 
 import app from "./module/app.js";
-import login from "./module/login.js";
+import project from "./module/project.js";
 import route from "./module/route.js";
 
 export default new Vuex.Store({
   modules: {
     app,
-    login,
+    project,
     route
   }
 });

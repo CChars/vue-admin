@@ -96,7 +96,8 @@ export default {
       PostProject(form)
         .then(Response => {
           console.log(Response);
-          infoDelete("sucess", Response.data.msg);
+          infoDelete("success", Response.data.msg);
+          emit("reflash", false);
         })
         .catch(error => {
           console.log(error);

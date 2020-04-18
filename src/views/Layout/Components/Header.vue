@@ -2,6 +2,11 @@
   <div id="header-wrap">
     <div class="el-icon-menu pull-left header-icon" @click="navMenuState"></div>
     <div class="pull-right header-icon">
+      <div class="user-photo pull-left">
+        <el-avatar
+          src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+        ></el-avatar>
+      </div>
       <div class="user-info pull-left">{{ username }}</div>
       <div
         class="el-icon-switch-button header-icon pull-left"
@@ -75,13 +80,17 @@ export default {
   font-size: 25px;
   cursor: pointer;
 }
+.user-photo {
+  padding-top: 10px;
+}
 .el-icon-switch-button {
   font-size: 20px;
   cursor: pointer;
 }
 .user-info {
   height: 100%;
-  padding: 0 32px;
+  // padding: 0 32px;
+  padding-right: 32px;
   border-right: 1px solid #ededed;
 }
 </style>

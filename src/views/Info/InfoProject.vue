@@ -158,7 +158,7 @@
 
     <div class="block-space-30"></div>
     <!-- dialog弹窗 -->
-    <DialogInfo :flag.sync="dialog_info" />
+    <DialogInfo :flag.sync="dialog_info" @reflash="reflashTable" />
     <StateDialog :flag.sync="look_dialog_info" />
   </div>
 </template>
@@ -298,8 +298,9 @@ export default {
     const handleCurrentChange = val => {
       console.log(`当前页: ${val}`);
     };
-    const closeDialog = () => {
-      dialog_info.value = false;
+    const reflashTable = () => {
+      // dialog_info.value = false;
+      getProjects();
     };
 
     /**
@@ -325,7 +326,7 @@ export default {
       deleteAll,
       handleSizeChange,
       handleCurrentChange,
-      closeDialog,
+      reflashTable,
       look_dialog_info,
       handleLook
     };
