@@ -32,6 +32,16 @@ export function GetWorkerProject() {
   });
 }
 /**
+ * 获取已完结project接口
+ */
+export function GetAllDoneProject() {
+  return service.request({
+    method: "get",
+    url: "/info/project/worker/getDoneProject"
+    // data: data //左边data为后台接受的 变量名（key），右边data是参数（value） 两者同名可一些一个
+  });
+}
+/**
  * 获取build接口
  */
 export function GetBuild(data) {
@@ -63,6 +73,16 @@ export function PostBuild(projectId, data) {
     method: "post",
     url: "/info/project/build/?projectId=" + projectId,
     data
+    // data: data //左边data为后台接受的 变量名（key），右边data是参数（value） 两者同名可一些一个
+  });
+}
+/**
+ * 设置项目检测完毕标识
+ */
+export function PutProjectDone(projectId) {
+  return service.request({
+    method: "put",
+    url: "/info/project/worker/?projectId=" + projectId
     // data: data //左边data为后台接受的 变量名（key），右边data是参数（value） 两者同名可一些一个
   });
 }

@@ -156,9 +156,9 @@
           <el-timeline-item
             timestamp="2018/4/12"
             placement="top"
-            v-if="project.buildList.length"
+            v-if="project.buildList.length && !project.tag"
           >
-            <el-card>
+            <el-card shadow="hover">
               <h4>项目名称: {{ project.projectName }}</h4>
               <p>项目地址: {{ project.projectAddress }}</p>
               <el-collapse
@@ -196,7 +196,7 @@
                 >继续更新建筑信息</el-button
               >
               <el-button
-                @click="go_on_updataBuildInfo"
+                @click="make_this_project_done(project)"
                 size="mini"
                 type="primary"
                 >完结该项目建筑检测</el-button
@@ -209,36 +209,54 @@
 
     <el-tab-pane label="已完成项目" name="third">
       <div class="block">
-        <el-timeline>
+        <el-timeline
+          v-for="doneProject in doenProjectData.item"
+          :key="doneProject.projectId"
+        >
           <el-timeline-item timestamp="2018/4/12" placement="top">
-            <el-card>
-              <h4>更新 Github 模板</h4>
-              <p>王小虎 提交于 2018/4/12 20:46</p>
+            <el-card shadow="hover">
+              <h4>项目名称: {{ doneProject.projectName }}</h4>
+              <p>项目地址: {{ doneProject.projectAddress }}</p>
 
               <el-collapse
                 v-model="activeNames"
                 @change="handleChange"
                 class="build-collapse"
               >
-                <el-collapse-item title="建筑信息" name="1">
+                <el-collapse-item name="1">
+                  <template slot="title">
+                    建筑信息<i class="header-icon el-icon-info"></i>
+                  </template>
                   <el-row>
                     <el-col
                       :span="8"
-                      v-for="(o, index) in 2"
-                      :key="o"
-                      :offset="index > 0 ? 2 : 0"
+                      class="build-collapse"
+                      v-for="(build, index) in doneProject.buildList"
+                      :key="build.buildId"
+                      :offset="index >= 0 ? 2 : 0"
                     >
-                      <el-card :body-style="{ padding: '0px' }">
+                      <el-card :body-style="{ padding: '0px' }" shadow="hover">
                         <img
                           src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
                           class="image"
                         />
                         <div style="padding: 14px;">
-                          <span>好吃的汉堡</span>
+                          <span>{{ build.name }}</span>
                           <div class="bottom clearfix">
                             <time class="time">{{ currentDate }}</time>
-                            <el-button type="text" class="button"
-                              >操作按钮</el-button
+                            <el-button
+                              type="text"
+                              class="button"
+                              style="padding-right=5px;"
+                              @click="getBuildDetail(build)"
+                              >查看详情</el-button
+                            >
+                            <el-button
+                              type="text"
+                              class="button"
+                              @click="print"
+                              style="padding-right=5px;"
+                              >打印</el-button
                             >
                           </div>
                         </div>
@@ -248,12 +266,12 @@
                 </el-collapse-item>
               </el-collapse>
               <div class="build-button"></div>
-              <el-button
+              <!-- <el-button
                 @click="go_on_updataBuildInfo"
                 size="mini"
                 type="primary"
                 >查看详情</el-button
-              >
+              > -->
             </el-card>
           </el-timeline-item>
         </el-timeline>
@@ -270,7 +288,11 @@ import DialogInfo from "./dialog/info.vue";
 import StateDialog from "./dialog/state.vue";
 import BuildInfoDrawer from "./dialog/buildInfo.vue";
 
-import { GetWorkerProject } from "../../api/project.js";
+import {
+  GetWorkerProject,
+  PutProjectDone,
+  GetAllDoneProject
+} from "../../api/project.js";
 
 // import VueRouter from "vue-router";
 
@@ -351,6 +373,10 @@ export default {
     const tableData = reactive({
       item: []
     });
+    //已经完成的project数据
+    const doenProjectData = reactive({
+      item: []
+    });
     const value = ref("");
     const value2 = ref("");
     const search_Key = ref("id");
@@ -368,6 +394,7 @@ export default {
       build: ""
     });
 
+    //新增建筑信息
     const go_on_updataBuildInfo = project => {
       // /Info/newBuild/:project_id
       //该路由方式在此处不生效
@@ -385,6 +412,26 @@ export default {
           id: project.projectId
         }
       });
+    };
+    //完结该项目
+    const make_this_project_done = project => {
+      root
+        .$confirm("此操作将终止该项目的检测, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+        .then(() => {
+          console.log("project");
+          console.log(project);
+          makeProjectDone(project.projectId);
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消操作"
+          });
+        });
     };
     //点击查看建筑信息详情
     const getBuildDetail = build => {
@@ -480,14 +527,67 @@ export default {
           });
           console.log(111111111);
           console.log(tableData.item);
+          root.$store.commit("project/CLEAN_ALL_PROJECT");
+          root.$store.commit("project/SET_ALL_PROJECT", updataData.item);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    };
+    //为项目设置是否完成
+    const makeProjectDone = projectId => {
+      PutProjectDone(projectId)
+        .then(Response => {
+          console.log(Response);
+          const data = Response.data;
+          if (data.status === 200) {
+            //成功之后再次获取信息
+            getDoneWorkerProject();
+            // 显示弹框
+            root.$message({
+              type: "success",
+              message: data.msg
+            });
+          } else {
+            root.$message({
+              type: "error",
+              message: data.msg
+            });
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          root.$message({
+            type: "error",
+            message: "操作失败！"
+          });
+        });
+    };
+    //获取有该检测人员标识的并且已经完成检测的项目project
+    const getDoneWorkerProject = () => {
+      GetAllDoneProject()
+        .then(Response => {
+          console.log(Response);
+          doenProjectData.item = Response.data;
+          // loading.value = false;
+
+          console.log(111111111);
+          console.log(doenProjectData.item);
+          // root.$store.commit("project/CLEAN_ALL_PROJECT");
+          // root.$store.commit("project/SET_ALL_PROJECT", updataData.item);
         })
         .catch(error => {
           console.log(error);
         });
     };
 
+    const print = () => {
+      console.log("打印按钮");
+    };
+
     onMounted(() => {
       getWorkerProject();
+      getDoneWorkerProject();
     });
     return {
       options,
@@ -501,10 +601,12 @@ export default {
       search_Key,
       tableData,
       updataData,
+      doenProjectData,
       input,
       dialog_info,
       build_info,
       go_on_updataBuildInfo,
+      make_this_project_done,
       getBuildDetail,
       handleClick,
       handleEdit,
@@ -515,6 +617,7 @@ export default {
       closeBuildInfo,
       look_dialog_info,
       uploadBuildInfo,
+      print,
       loading
     };
   }

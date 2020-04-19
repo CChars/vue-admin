@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="building">
-      <div style="padding-left: 30px; padding-top: 20px">
+      <div style="padding-left: 30px; padding-top: 20px" v-if="$route.query.id">
         <el-page-header
           @back="goBack"
           style="margin-bottom: 15px;"
@@ -9,8 +9,33 @@
         <label for="" style="font-size:16px "
           ><span> 为项目</span>
           <span class="color" v-if="projectName">{{ projectName }}</span>
-          <span>上传更新建筑的详细数据</span>
+          <span> 上传更新建筑的详细数据</span>
           <span> 路由： {{ $route.query.id }}</span></label
+        >
+
+        <el-divider></el-divider>
+      </div>
+
+      <div
+        style="padding-left: 30px; padding-top: 20px;"
+        v-if="!$route.query.id"
+      >
+        <label for="" style="font-size:16px "><span> 为项目</span></label>
+        <el-select
+          v-model="projectId2"
+          placeholder="请选择"
+          style="padding-left: 15px; padding-right: 15px;"
+        >
+          <el-option
+            v-for="item in options.item"
+            :key="item.projectId"
+            :label="item.projectName"
+            :value="item.projectId"
+          >
+          </el-option>
+        </el-select>
+        <label for="" style="font-size:16px "
+          ><span> 上传更新建筑的详细数据</span></label
         >
 
         <el-divider></el-divider>
@@ -123,14 +148,24 @@ export default {
   setup(props, { refs, root }) {
     const projectName = ref("");
     const projectId = ref("");
+    const projectId2 = ref("");
+    //项目选择框
+    const options = reactive({
+      item: []
+    });
     //拿到存在vuex中的project信息
     const projectInfo = watch(() => {
       const a = root.$store.state.project.project;
+      const projects = root.$store.state.project.allProject;
       console.log(1111111111111);
       console.log(a);
+      console.log(222222222222);
+      console.log(projects);
       projectName.value = a.projectName;
       projectId.value = a.projectId;
-      console.log(projectId.value);
+
+      options.item = projects;
+      console.log(options.item);
     });
 
     const dialogImageUrl = ref("");
@@ -163,13 +198,21 @@ export default {
       latitude: "",
       photo: ""
     });
-
     const submitBuildForm = formName => {
       refs[formName].validate(valid => {
         if (valid) {
-          console.log("formName submit!!");
-          console.log(ruleForm);
-          addBuildForProject(projectId.value, ruleForm);
+          // console.log("formName submit!!");
+          // console.log(ruleForm);
+          // console.log(projectId.value);
+          // console.log(projectId2.value);
+          const id = ref("");
+          if (root.$route.query.id) {
+            id.value = projectId.value;
+          } else if (!root.$route.query.id) {
+            id.value = projectId2.value;
+          }
+          // console.log(id.value);
+          addBuildForProject(id.value, ruleForm);
         } else {
           console.log("error submit!!");
           return false;
@@ -197,18 +240,19 @@ export default {
     };
     //向后台提交build信息
     const addBuildForProject = (projectId, ruleForm) => {
-      console.log("formName submit!!formNameformNameformName");
-      console.log(ruleForm);
       PostBuild(projectId, ruleForm)
         .then(Response => {
           console.log(Response.data);
-          refs[ruleForm].resetFields();
+          console.log("formName submit!!formNameformNameformName");
+          // refs[ruleForm].resetFields();
+          resetForm("ruleForm");
           infoUpload("success", Response.data.msg);
         })
         .catch(error => {
           console.log(error);
-          refs[ruleForm].resetFields();
-          infoUpload("error", Response.data.msg);
+          // refs[ruleForm].resetFields();
+          resetForm("ruleForm");
+          infoUpload("error", "上传建筑信息失败！");
         });
     };
     onUnmounted(() => {
@@ -223,8 +267,10 @@ export default {
     };
     return {
       projectName,
+      projectId2,
       projectInfo,
       submitBuildForm,
+      options,
       resetForm,
       handleRemove,
       dialogImageUrl,

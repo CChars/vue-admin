@@ -1,5 +1,6 @@
 const state = {
-  project: ""
+  project: "",
+  allProject: ""
 };
 
 const getters = {}; //有属性计算的时候使用
@@ -11,6 +12,12 @@ const mutations = {
   },
   CLEAN_PROJECT(state) {
     state.project = "";
+  },
+  SET_ALL_PROJECT(state, data) {
+    state.allProject = data;
+  },
+  CLEAN_ALL_PROJECT(state) {
+    state.allProject = "";
   }
 };
 
