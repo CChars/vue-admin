@@ -86,3 +86,14 @@ export function PutProjectDone(projectId) {
     // data: data //左边data为后台接受的 变量名（key），右边data是参数（value） 两者同名可一些一个
   });
 }
+/**
+ * 上传图片
+ */
+export function uploadBuildPhoto(projectId, data) {
+  return service.request({
+    method: "post",
+    url: "/info/project/build/uploadPhoto/?projectId=" + projectId,
+    data
+    // data: data //左边data为后台接受的 变量名（key），右边data是参数（value） 两者同名可一些一个
+  });
+}

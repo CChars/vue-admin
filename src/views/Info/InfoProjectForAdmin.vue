@@ -59,85 +59,6 @@
     </el-tab-pane>
     <el-tab-pane label="已分配项目" name="second">
       <div>
-        <!-- <el-row :gutter="16">
-          <el-col :span="4">
-            <div class="label-wrap category">
-              <label for="">类型：</label>
-              <div class="wrap-content">
-                <el-select
-                  v-model="value"
-                  placeholder="请选择"
-                  style="width: 100%;"
-                >
-                  <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  >
-                  </el-option>
-                </el-select>
-              </div>
-            </div>
-          </el-col>
-
-          <el-col :span="7">
-            <div class="label-wrap date">
-              <label for="">日期: </label>
-              <div class="wrap-content">
-                <el-date-picker
-                  v-model="value2"
-                  type="datetimerange"
-                  align="right"
-                  start-placeholder="开始日期"
-                  end-placeholder="结束日期"
-                  :default-time="['12:00:00', '08:00:00']"
-                >
-                </el-date-picker>
-              </div>
-            </div>
-          </el-col>
-
-          <el-col :span="3">
-            <div class="label-wrap key-word">
-              <label for="">关键字: </label>
-              <div class="wrap-content">
-                <el-select v-model="search_Key" style="width: 100px;">
-                  <el-option
-                    v-for="item in searchOption"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  >
-                  </el-option>
-                </el-select>
-              </div>
-            </div>
-          </el-col>
-
-          <el-col :span="3">
-            <el-form-item>
-         <el-input
-          v-model="input"
-          placeholder="请输入内容"
-          style="width: 100%"
-        ></el-input> -->
-        <!-- </el-form-item> -->
-        <!-- </el-col> -->
-
-        <!-- <el-col :span="2">
-            <el-button type="primary" style="width: 100%">搜索</el-button>
-          </el-col> -->
-
-        <!-- <el-col :span="3"> &nbsp;</el-col> -->
-
-        <!-- <el-col :span="2" :offset="3">
-        <el-button type="danger" style="width: 100%" @click="dialog_info = true"
-          >新增</el-button
-        >
-        </el-col> -->
-        <!-- </el-row> -->
-
         <div class="block-space-30"></div>
         <!-- 表格 -->
         <el-table
@@ -163,14 +84,52 @@
 
           <el-table-column prop="name" label="操作">
             <template slot-scope="scope">
+              <el-popover placement="right" width="600" trigger="click">
+                <el-table :data="littleTable.gridData">
+                  <el-table-column
+                    width="150"
+                    property="name"
+                    label="建筑名称"
+                  ></el-table-column>
+
+                  <el-table-column
+                    width="200"
+                    property="address"
+                    label="建筑地址"
+                  ></el-table-column>
+
+                  <el-table-column
+                    width="150"
+                    property="project.worker"
+                    label="检测人员"
+                  ></el-table-column>
+
+                  <el-table-column label="操作" width="100">
+                    <template slot-scope="scope1">
+                      <el-button
+                        type="text"
+                        class="button"
+                        @click="getBuildDetail(scope1.row)"
+                        >查看详情</el-button
+                      >
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <el-button
+                  slot="reference"
+                  size="mini"
+                  @click="getBuilds(scope.$index, scope.row)"
+                  >查看</el-button
+                >
+              </el-popover>
+
               <el-button
+                v-if="scope.row.tag"
                 size="mini"
-                type="info"
-                @click="
-                  handleLook(scope.$index, scope.row);
-                  look_dialog_info.dialog_info_1 = true;
-                "
-                >进度</el-button
+                type="success"
+                style="margin-left:10px;"
+                @click="print(scope.row.projectId)"
+                >打印</el-button
               >
             </template></el-table-column
           >
@@ -203,6 +162,8 @@
         <StateDialog :flag.sync="look_dialog_info" />
       </div>
     </el-tab-pane>
+    <!-- dialog弹窗 -->
+    <BuildInfoDrawer :flag.sync="build_info" @close="closeBuildInfo" />
   </el-tabs>
   <!-- <div>项目列表</div> -->
 </template>
@@ -215,8 +176,12 @@ import {
   computed,
   onBeforeMount
 } from "@vue/composition-api";
+
 import DialogInfo from "./dialog/info.vue";
+
 import StateDialog from "./dialog/state.vue";
+
+import BuildInfoDrawer from "./dialog/buildInfo.vue";
 
 // import VueRouter from "vue-router";
 
@@ -225,11 +190,13 @@ import { global } from "../../utils/global_3.0.js";
 
 import { GetAllProject } from "../../api/project.js";
 
+import { GetBuild } from "../../api/project.js";
+
 import { getWorkerRequest, putSetWorkerRequest } from "../../api/user.js";
 
 export default {
   name: "infoIndex",
-  components: { DialogInfo, StateDialog },
+  components: { DialogInfo, StateDialog, BuildInfoDrawer },
 
   setup(props, { root }) {
     const { confirm } = global();
@@ -246,21 +213,7 @@ export default {
     // App.use(router);
 
     const formInline = reactive({
-      workers: [
-        //   {
-        //     adminUser: "",
-        //     workerID: ""
-        // },
-        //   {
-        //     adminUser: "",
-        //     workerID: ""
-        //   }
-        // ,
-        //   {
-        //     adminUser: "",
-        //     workerID: ""
-        //   }
-      ]
+      workers: []
     });
 
     const username = computed(() => root.$store.state.app.username);
@@ -268,18 +221,11 @@ export default {
     const activeName = ref("first");
 
     const options = reactive({
-      item: [
-        // {
-        //   value: 1,
-        //   label: "黄金糕"
-        // },
-        // {
-        //   value: 2,
-        //   label: "双皮奶"
-        // }
-      ]
+      item: []
     });
-
+    const littleTable = reactive({
+      gridData: []
+    });
     const searchOption = reactive([
       {
         value: "id",
@@ -309,6 +255,13 @@ export default {
       dialog_info_2: 3
     });
 
+    //右侧的建筑信息弹出抽屉
+    const build_info = reactive({
+      dialog_states: false,
+      build_index: "",
+      build: ""
+    });
+
     const onSubmitForWorker = (index, projectId) => {
       // console.log(options);
       console.log(index);
@@ -327,17 +280,44 @@ export default {
       console.log(tab, event);
     };
 
-    const handleLook = (index, row) => {
-      console.log(index, row);
-      console.log(look_dialog_info);
-      console.log("dialog_info_1");
-      console.log(look_dialog_info.dialog_info_1);
+    const print = projectId => {
+      console.log("打印按钮");
+      console.log(projectId);
+      window.open("/info/project/export/?projectId=" + projectId);
     };
 
-    const handleEdit = (index, row) => {
+    //点击列表中的查看按钮将查询项目中的build信息
+    const getBuilds = (index, row) => {
       console.log(index, row);
       // let a = "/user/" + 1;
       // root.$router.push(a);
+      const project_id = row.projectId;
+      GetBuild(project_id)
+        .then(Response => {
+          let data = Response.data;
+          console.log("这里是dataaaaaaaaa");
+          console.log(data);
+          loading.value = false;
+          littleTable.gridData = data;
+          // console.log(project);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    };
+    const getBuildDetail = build => {
+      console.log(build);
+      // let a = "/user/" + 1;
+      // root.$router.push(a);
+      build_info.dialog_states = true;
+      build_info.build_index = 1;
+      build_info.build = build;
+    };
+
+    const closeBuildInfo = () => {
+      build_info.dialog_states = false;
+      build_info.build_index = "";
+      console.log("aaaaaaaa");
     };
 
     //单个删除
@@ -471,6 +451,7 @@ export default {
       loadingTable,
       username,
       options,
+      littleTable,
       value,
       activeName,
       value2,
@@ -483,8 +464,11 @@ export default {
       dialog_info,
       onSubmitForWorker,
       // toDetail,
+      build_info,
+      closeBuildInfo,
       handleClick,
-      handleEdit,
+      getBuildDetail,
+      getBuilds,
       handleDelete,
       deleteAll,
       setTableData,
@@ -492,7 +476,7 @@ export default {
       handleCurrentChange,
       closeDialog,
       look_dialog_info,
-      handleLook
+      print
     };
   }
 };

@@ -210,7 +210,7 @@
     <el-tab-pane label="已完成项目" name="third">
       <div class="block">
         <el-timeline
-          v-for="doneProject in doenProjectData.item"
+          v-for="(doneProject, index) in doenProjectData.item"
           :key="doneProject.projectId"
         >
           <el-timeline-item timestamp="2018/4/12" placement="top">
@@ -219,7 +219,7 @@
               <p>项目地址: {{ doneProject.projectAddress }}</p>
 
               <el-collapse
-                v-model="activeNames"
+                v-model="activeNames[index]"
                 @change="handleChange"
                 class="build-collapse"
               >
@@ -236,10 +236,11 @@
                       :offset="index >= 0 ? 2 : 0"
                     >
                       <el-card :body-style="{ padding: '0px' }" shadow="hover">
-                        <img
-                          src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
+                        <el-image
+                          :src="build.pictures[0].pictureUrl"
                           class="image"
-                        />
+                        >
+                        </el-image>
                         <div style="padding: 14px;">
                           <span>{{ build.name }}</span>
                           <div class="bottom clearfix">
@@ -247,21 +248,22 @@
                             <el-button
                               type="text"
                               class="button"
-                              style="padding-right=5px;"
                               @click="getBuildDetail(build)"
                               >查看详情</el-button
-                            >
-                            <el-button
-                              type="text"
-                              class="button"
-                              @click="print"
-                              style="padding-right=5px;"
-                              >打印</el-button
                             >
                           </div>
                         </div>
                       </el-card>
                     </el-col>
+                  </el-row>
+
+                  <el-row class="button">
+                    <el-button
+                      type="primary"
+                      round
+                      @click="print(doneProject.projectId)"
+                      >打印项目信息</el-button
+                    >
                   </el-row>
                 </el-collapse-item>
               </el-collapse>
@@ -543,6 +545,7 @@ export default {
           if (data.status === 200) {
             //成功之后再次获取信息
             getDoneWorkerProject();
+            getWorkerProject();
             // 显示弹框
             root.$message({
               type: "success",
@@ -581,8 +584,10 @@ export default {
         });
     };
 
-    const print = () => {
+    const print = projectId => {
       console.log("打印按钮");
+      console.log(projectId);
+      window.open("/info/project/export/?projectId=" + projectId);
     };
 
     onMounted(() => {
@@ -665,12 +670,12 @@ export default {
 }
 
 .button {
-  padding: 0;
-  float: right;
+  text-align: center;
 }
 
 .image {
-  width: 100%;
+  // width: 100%;
+  height: 200px;
   display: block;
 }
 

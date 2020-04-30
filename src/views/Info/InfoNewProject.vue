@@ -114,12 +114,15 @@
         </el-row>
 
         <el-row>
-          <el-form-item label="建筑照片" prop="photo">
+          <el-form-item label="建筑照片" prop="pictures">
             <el-upload
-              action="https://jsonplaceholder.typicode.com/posts/"
+              action="#"
               list-type="picture-card"
               :on-preview="handlePictureCardPreview"
               :on-remove="handleRemove"
+              :http-request="uploadAvatar"
+              :before-upload="beforeAvatarUpload"
+              :file-list="fileList.list"
             >
               <i class="el-icon-plus"></i>
             </el-upload>
@@ -143,7 +146,7 @@
 
 <script>
 import { reactive, ref, watch, onUnmounted } from "@vue/composition-api";
-import { PostBuild } from "../../api/project.js";
+import { PostBuild, uploadBuildPhoto } from "../../api/project.js";
 export default {
   setup(props, { refs, root }) {
     const projectName = ref("");
@@ -167,9 +170,6 @@ export default {
       options.item = projects;
       console.log(options.item);
     });
-
-    const dialogImageUrl = ref("");
-    const dialogVisible = ref(false);
 
     const buildingrules = reactive({
       name: [{ required: true, message: "请输入建筑名称", trigger: "blur" }],
@@ -196,7 +196,7 @@ export default {
       height: "",
       longitude: "",
       latitude: "",
-      photo: ""
+      pictures: []
     });
     const submitBuildForm = formName => {
       refs[formName].validate(valid => {
@@ -211,7 +211,13 @@ export default {
           } else if (!root.$route.query.id) {
             id.value = projectId2.value;
           }
-          // console.log(id.value);
+          picList.list.forEach(list => {
+            // ruleForm.photo.push(list.pictureUrl);
+            ruleForm.pictures.push({ pictureUrl: list.pictureUrl });
+            // { key: uid, pictureUrl: res.data.obj.url }
+          });
+          console.log("这里是ruleForm");
+          console.log(ruleForm);
           addBuildForProject(id.value, ruleForm);
         } else {
           console.log("error submit!!");
@@ -224,13 +230,6 @@ export default {
       refs[formName].resetFields();
     };
 
-    const handleRemove = (file, fileList) => {
-      console.log(file, fileList);
-    };
-    const handlePictureCardPreview = file => {
-      root.dialogImageUrl = file.url;
-      root.dialogVisible = true;
-    };
     //删除的信息弹窗
     const infoUpload = (type, message) => {
       root.$message({
@@ -246,15 +245,114 @@ export default {
           console.log("formName submit!!formNameformNameformName");
           // refs[ruleForm].resetFields();
           resetForm("ruleForm");
+          picList.list = [];
           infoUpload("success", Response.data.msg);
         })
         .catch(error => {
           console.log(error);
           // refs[ruleForm].resetFields();
           resetForm("ruleForm");
+          picList.list = [];
           infoUpload("error", "上传建筑信息失败！");
         });
     };
+
+    ////######################图片上传相关##################################
+
+    const dialogImageUrl = ref("");
+    const dialogVisible = ref(false);
+
+    const picList = reactive({
+      list: []
+    });
+    const fileList = reactive({
+      list: []
+    });
+
+    //给后台上传图片
+    const uploadAvatar = item => {
+      const formData = new FormData();
+      formData.append("file", item.file);
+      const uid = item.file.uid;
+
+      console.log("formData");
+      console.log(formData);
+      console.log("uid");
+      console.log(uid);
+      console.log("item");
+      console.log(item);
+
+      const id = ref("");
+      if (root.$route.query.id) {
+        id.value = projectId.value;
+      } else if (!root.$route.query.id) {
+        id.value = projectId2.value;
+      }
+
+      uploadBuildPhoto(id.value, formData)
+        .then(res => {
+          console.log("res");
+          console.log(res);
+          picList.list.push({ key: uid, pictureUrl: res.data.obj.url });
+          console.log("picList");
+          console.log(picList);
+          emptyUpload();
+        })
+        .catch(() => {
+          root.$message.error("上传失败，请重新上传");
+          emptyUpload();
+        });
+    };
+
+    //在上传之前校验图片格式大小
+    const beforeAvatarUpload = file => {
+      const isJPG = file.type === "image/jpeg";
+      const isPng = file.type === "image/png";
+      const isLt2M = file.size / 1024 / 1024 < 2;
+
+      if (!isJPG && !isPng) {
+        root.$message.error("上传图片只能是 JPG或png 格式!");
+      }
+      if (!isLt2M) {
+        root.$message.error("上传图片大小不能超过 2MB!");
+      }
+      return (isJPG || isPng) && isLt2M;
+    };
+
+    const handleRemove = (file, fileList) => {
+      for (const i in picList.list) {
+        if (picList.list[i].key === file.uid) {
+          picList.list.splice(i, 1);
+        }
+      }
+      console.log(file, fileList);
+    };
+
+    //查看大图
+    const handlePictureCardPreview = file => {
+      dialogImageUrl.value = file.url;
+      dialogVisible.value = true;
+      console.log("file");
+      console.log(file);
+    };
+
+    /**
+     * 清空上传组件
+     */
+    const emptyUpload = () => {
+      const mainImg = refs.upload;
+      if (mainImg) {
+        if (mainImg.length) {
+          mainImg.forEach(item => {
+            item.clearFiles();
+          });
+        } else {
+          refs.upload.clearFiles();
+        }
+      }
+    };
+    ////######################图片上传相关##################################
+
     onUnmounted(() => {
       console.log("组件将要卸载");
       //在关闭之后将vuex里面的项目信息清除
@@ -274,13 +372,21 @@ export default {
       resetForm,
       handleRemove,
       dialogImageUrl,
-      handlePictureCardPreview,
       dialogVisible,
       buildingrules,
       // projectrules,
+      //#############
+      picList,
+      fileList,
+      uploadAvatar,
+      beforeAvatarUpload,
       ruleForm,
+      handlePictureCardPreview,
+      emptyUpload,
+      //#############
       // sizeForm,
-      goBack
+      goBack,
+      addBuildForProject
     };
   }
 };
