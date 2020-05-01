@@ -145,8 +145,18 @@
 </template>
 
 <script>
-import { reactive, ref, watch, onUnmounted } from "@vue/composition-api";
-import { PostBuild, uploadBuildPhoto } from "../../api/project.js";
+import {
+  reactive,
+  ref,
+  watch,
+  onUnmounted,
+  onMounted
+} from "@vue/composition-api";
+import {
+  PostBuild,
+  uploadBuildPhoto,
+  GetWorkerProject
+} from "../../api/project.js";
 export default {
   setup(props, { refs, root }) {
     const projectName = ref("");
@@ -167,8 +177,13 @@ export default {
       projectName.value = a.projectName;
       projectId.value = a.projectId;
 
-      options.item = projects;
-      console.log(options.item);
+      // projects.forEach(project => {
+      //   if (project.tag != 1) {
+      //     options.item.push(project);
+      //   }
+      // });
+      // options.item = projects;
+      // console.log(options.item);
     });
 
     const buildingrules = reactive({
@@ -254,6 +269,26 @@ export default {
           resetForm("ruleForm");
           picList.list = [];
           infoUpload("error", "上传建筑信息失败！");
+        });
+    };
+
+    //获取有该检测人员标识的项目project
+    const getWorkerProject = () => {
+      GetWorkerProject()
+        .then(Response => {
+          console.log(Response);
+          //挑选出未完结的项目
+          Response.data.forEach(project => {
+            if (project.tag != 1) {
+              options.item.push(project);
+            }
+          });
+
+          console.log(1155555555551);
+          console.log(options.item);
+        })
+        .catch(error => {
+          console.log(error);
         });
     };
 
@@ -357,6 +392,9 @@ export default {
       console.log("组件将要卸载");
       //在关闭之后将vuex里面的项目信息清除
       root.$store.commit("project/CLEAN_PROJECT");
+    });
+    onMounted(() => {
+      getWorkerProject();
     });
     //返回上一层
     const goBack = () => {

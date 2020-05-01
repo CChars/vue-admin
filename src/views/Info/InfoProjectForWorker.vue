@@ -102,7 +102,7 @@
             <template slot-scope="scope">
               <el-button
                 size="mini"
-                type="info"
+                type="primary"
                 @click="
                   uploadBuildInfo(scope.$index, scope.row);
                   look_dialog_info.dialog_info_1 = true;
@@ -149,6 +149,18 @@
 
     <el-tab-pane label="正在更新项目" name="second">
       <div class="block">
+        <el-col
+          :span="20"
+          v-if="
+            updataData.item.length - tableData.item.length ==
+              doenProjectData.item.length
+          "
+        >
+          <el-card shadow="hover">
+            当前暂无正在更新的项目
+          </el-card>
+        </el-col>
+
         <el-timeline
           v-for="project in updataData.item"
           :key="project.projectId"
@@ -163,7 +175,7 @@
               <p>项目地址: {{ project.projectAddress }}</p>
               <el-collapse
                 v-model="activeNames[index]"
-                @change="handleChange"
+                @change="handleChange2"
                 class="build-collapse"
                 v-for="(build, index) in project.buildList"
                 :key="build.buildId"
@@ -220,7 +232,7 @@
 
               <el-collapse
                 v-model="activeNames[index]"
-                @change="handleChange"
+                @change="handleChange(doneProject.projectId)"
                 class="build-collapse"
               >
                 <el-collapse-item name="1">
@@ -257,12 +269,33 @@
                     </el-col>
                   </el-row>
 
-                  <el-row class="button">
+                  <el-row
+                    class="button"
+                    v-if="application.info && application.pringtAuthorization"
+                  >
                     <el-button
                       type="primary"
                       round
                       @click="print(doneProject.projectId)"
                       >打印项目信息</el-button
+                    >
+                  </el-row>
+
+                  <el-row
+                    class="button"
+                    v-if="application.info && !application.pringtAuthorization"
+                  >
+                    <el-button type="primary" round disabled
+                      >申请正在审核中</el-button
+                    >
+                  </el-row>
+
+                  <el-row class="button" v-if="!application.info">
+                    <el-button
+                      type="primary"
+                      round
+                      @click="applyPrint(doneProject.projectId)"
+                      >申请项目打印</el-button
                     >
                   </el-row>
                 </el-collapse-item>
@@ -296,6 +329,10 @@ import {
   GetAllDoneProject
 } from "../../api/project.js";
 
+import {
+  getApplyRequest,
+  postApplyRequest
+} from "../../api/exportApplicaation.js";
 // import VueRouter from "vue-router";
 
 // import App from "../../App.vue";
@@ -318,6 +355,7 @@ export default {
     // App.use(router);
 
     const activeName = ref("first");
+
     const activeNames = reactive(
       [""],
       [""],
@@ -335,8 +373,40 @@ export default {
     const loading = ref(true);
 
     const currentDate = new Date();
-    const handleChange = val => {
+
+    const application = reactive({
+      info: []
+    });
+
+    //  申请时向后台发送的模板
+    const applyInfo = reactive({
+      projectId: "",
+      userId: "",
+      pringtAuthorization: ""
+    });
+
+    //点击折叠面板的时候 向后台请求该项目的授权信息
+    const handleChange = projectId => {
+      console.log("handleChange");
+      console.log(projectId);
+      applyRequest(projectId);
+    };
+
+    const handleChange2 = val => {
       console.log(val);
+    };
+
+    const applyRequest = projectId => {
+      getApplyRequest(projectId)
+        .then(Response => {
+          console.log(Response);
+
+          //将查询出来的授权信息赋给 application 如果没有被授权则为空
+          application.info = Response.data;
+        })
+        .catch(error => {
+          console.log(error);
+        });
     };
 
     const options = reactive([
@@ -590,6 +660,43 @@ export default {
       window.open("/info/project/export/?projectId=" + projectId);
     };
 
+    //申请打印请求
+    const applyPrint = projectId => {
+      console.log(projectId);
+      applyInfo.projectId = projectId;
+      postApplyRequest(applyInfo)
+        .then(Response => {
+          console.log(Response);
+          const msg = Response.data.msg;
+
+          if (Response.data.status == 200) {
+            root.$notify({
+              title: "成功",
+              message: msg,
+              type: "success"
+            });
+            application.info = {
+              pringtAuthorization: null,
+              printAuthorizationId: "",
+              projectId: "",
+              userId: ""
+            };
+          } else {
+            root.$notify.error({
+              title: "错误",
+              message: msg
+            });
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          root.$notify.error({
+            title: "错误",
+            message: "申请失败"
+          });
+        });
+    };
+
     onMounted(() => {
       getWorkerProject();
       getDoneWorkerProject();
@@ -599,8 +706,10 @@ export default {
       value,
       activeName,
       activeNames,
+      application,
       currentDate,
       handleChange,
+      handleChange2,
       value2,
       searchOption,
       search_Key,
@@ -623,6 +732,7 @@ export default {
       look_dialog_info,
       uploadBuildInfo,
       print,
+      applyPrint,
       loading
     };
   }

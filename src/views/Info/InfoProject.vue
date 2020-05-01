@@ -4,8 +4,8 @@
     <el-row :gutter="16">
       <el-col :span="4">
         <div class="label-wrap category">
-          <label for="">类型：</label>
-          <div class="wrap-content">
+          <label style="font-size: 18px">项目列表</label>
+          <!-- <div class="wrap-content">
             <el-select
               v-model="value"
               placeholder="请选择"
@@ -19,12 +19,12 @@
               >
               </el-option>
             </el-select>
-          </div>
+          </div> -->
         </div>
       </el-col>
 
       <el-col :span="7">
-        <div class="label-wrap date">
+        <!-- <div class="label-wrap date">
           <label for="">日期: </label>
           <div class="wrap-content">
             <el-date-picker
@@ -37,11 +37,11 @@
             >
             </el-date-picker>
           </div>
-        </div>
+        </div> -->
       </el-col>
 
       <el-col :span="3">
-        <div class="label-wrap key-word">
+        <!-- <div class="label-wrap key-word">
           <label for="">关键字: </label>
           <div class="wrap-content">
             <el-select v-model="search_Key" style="width: 100px;">
@@ -54,35 +54,32 @@
               </el-option>
             </el-select>
           </div>
-        </div>
+        </div> -->
       </el-col>
 
       <el-col :span="3">
-        <!-- <el-form-item> -->
-        <el-input
+        <!-- <el-input
           v-model="input"
           placeholder="请输入内容"
           style="width: 100%"
-        ></el-input>
-        <!-- </el-form-item> -->
+        ></el-input> -->
       </el-col>
 
       <el-col :span="2">
-        <!-- <el-form-item> -->
-        <el-button type="primary" style="width: 100%">搜索</el-button>
-        <!-- </el-form-item> -->
+        <!-- <el-button type="primary" style="width: 100%">搜索</el-button> -->
       </el-col>
 
-      <!-- <el-col :span="3"> &nbsp;</el-col> -->
-
-      <el-col :span="2" :offset="3">
-        <el-button type="danger" style="width: 100%" @click="dialog_info = true"
+      <el-col :span="2" :offset="3" class="pull-right">
+        <el-button
+          type="primary"
+          style="width: 100%"
+          @click="dialog_info = true"
           >新增</el-button
         >
       </el-col>
     </el-row>
 
-    <div class="block-space-30"></div>
+    <!-- <div class="block-space-30"></div> -->
     <!-- 表格 -->
     <el-table
       :data="tableData.item"
@@ -113,13 +110,10 @@
           <el-button
             size="mini"
             type="info"
-            @click="
-              handleLook(scope.$index, scope.row);
-              look_dialog_info.dialog_info_1 = true;
-            "
+            @click="handleLook(scope.$index, scope.row)"
             >进度</el-button
           >
-          <el-button
+          <!-- <el-button
             size="mini"
             type="success"
             @click="handleEdit(scope.$index, scope.row)"
@@ -130,7 +124,7 @@
             type="danger"
             @click="handleDelete(scope.$index, scope.row)"
             >删除</el-button
-          >
+          > -->
         </template></el-table-column
       >
     </el-table>
@@ -159,7 +153,7 @@
     <div class="block-space-30"></div>
     <!-- dialog弹窗 -->
     <DialogInfo :flag.sync="dialog_info" @reflash="reflashTable" />
-    <StateDialog :flag.sync="look_dialog_info" />
+    <StateDialog :flag.sync="look_dialog_info" @close="closeState" />
   </div>
 </template>
 
@@ -232,7 +226,7 @@ export default {
 
     const look_dialog_info = reactive({
       dialog_info_1: false,
-      dialog_info_2: 3
+      dialog_info_2: 0
     });
 
     //向后端请求用户已经申请的项目
@@ -252,6 +246,18 @@ export default {
 
     const handleLook = (index, row) => {
       console.log(index, row);
+      if (row.worker != null && row.tag == null) {
+        //说明已经分配了检测人员 但是没有检测完成
+        look_dialog_info.dialog_info_2 = 2;
+      } else if (row.worker == null) {
+        //说明还没有分配检测人员
+        look_dialog_info.dialog_info_2 = 1;
+      } else if (row.tag == 1) {
+        //说明检测完成
+        look_dialog_info.dialog_info_2 = 3;
+      }
+
+      look_dialog_info.dialog_info_1 = true;
       console.log(look_dialog_info);
       console.log("dialog_info_1");
       console.log(look_dialog_info.dialog_info_1);
@@ -303,6 +309,11 @@ export default {
       getProjects();
     };
 
+    const closeState = () => {
+      look_dialog_info.dialog_info_1 = false;
+      look_dialog_info.dialog_info_2 = 0;
+    };
+
     /**
      * 生命周期
      */
@@ -327,6 +338,7 @@ export default {
       handleSizeChange,
       handleCurrentChange,
       reflashTable,
+      closeState,
       look_dialog_info,
       handleLook
     };

@@ -36,7 +36,7 @@ export default {
   },
   setup(props, { emit }) {
     const dialog_info_flag = ref(false);
-    const active_flag = ref("");
+    const active_flag = ref();
     // const formLabelWidth = ref("70px");
     // const dialogFormVisible = ref(false);
 
@@ -68,10 +68,11 @@ export default {
     //function
     const close = () => {
       dialog_info_flag.value = false;
-      emit("update:flag", {
-        dialog_info_1: false,
-        dialog_info_2: 1
-      });
+      // emit("update:flag", {
+      //   dialog_info_1: false,
+      //   dialog_info_2: 1
+      // });
+      emit("close", false);
     };
 
     return {

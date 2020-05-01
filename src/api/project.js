@@ -10,6 +10,16 @@ export function GetProject() {
     // data: data //左边data为后台接受的 变量名（key），右边data是参数（value） 两者同名可一些一个
   });
 }
+/**
+ * 用户获取project接口
+ */
+export function GetOneProject(projectId) {
+  return service.request({
+    method: "get",
+    url: "/info/project/getOneProjectById/?projectId=" + projectId
+    // data: data //左边data为后台接受的 变量名（key），右边data是参数（value） 两者同名可一些一个
+  });
+}
 
 /**
  * 管理员获取project接口

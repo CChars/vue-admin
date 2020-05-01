@@ -129,11 +129,40 @@
           </el-col>
         </el-row>
 
-        <el-row class="button111">
-          <el-button type="primary" round @click="print(doneProject.projectId)"
-            >打印项目信息</el-button
+        <div
+          v-if="Project.buildList[0] && Project.buildList[0].project.tag == 1"
+        >
+          <el-row
+            class="button111"
+            v-if="application.info && application.pringtAuthorization"
           >
-        </el-row>
+            <el-button
+              type="primary"
+              round
+              @click="print(Project.buildList[0].project.projectId)"
+              >打印项目信息</el-button
+            >
+          </el-row>
+
+          <el-row
+            class="button111"
+            v-if="application.info && !application.pringtAuthorization"
+          >
+            <el-button type="primary" round disabled>申请正在审核中</el-button>
+          </el-row>
+
+          <el-row class="button111" v-if="!application.info">
+            <el-button
+              type="primary"
+              round
+              @click="applyPrint(Project.buildList[0].project.projectId)"
+              >申请项目打印</el-button
+            >
+          </el-row>
+        </div>
+        <div v-if="Project.buildList.length == 0">
+          <span>该项目还未开始检测或正在进行检测请耐心等待</span>
+        </div>
       </el-collapse-item>
     </el-collapse>
     <!-- dialog弹窗 -->
@@ -143,8 +172,15 @@
 
 <script>
 import { reactive, ref, onMounted } from "@vue/composition-api";
-import { GetBuild } from "../../api/project.js";
+
+import { GetBuild, GetOneProject } from "../../api/project.js";
+
 import BuildInfoDrawer from "./dialog/buildInfo.vue";
+
+import {
+  getApplyRequest,
+  postApplyRequest
+} from "../../api/exportApplicaation.js";
 
 export default {
   components: { BuildInfoDrawer },
@@ -158,6 +194,17 @@ export default {
 
     const loading = ref(true);
     console.log(project_id);
+
+    const application = reactive({
+      info: []
+    });
+
+    //  申请时向后台发送的模板
+    const applyInfo = reactive({
+      projectId: "",
+      userId: "",
+      pringtAuthorization: ""
+    });
 
     //存储根据projrctId查询返回的bui的list
     const Project = reactive({
@@ -206,8 +253,24 @@ export default {
           console.log(data);
           Project.buildList = data;
           // let project = data.project;
-          projectName.value = data[0].project.projectName;
+          // projectName.value = data[0].project.projectName;
           loading.value = false;
+          console.log(Response);
+          // console.log(project);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    };
+    const getProject = project_id => {
+      GetOneProject(project_id)
+        .then(Response => {
+          let data = Response.data;
+          console.log("这里是dProject");
+          console.log(data);
+          // let project = data.project;
+          projectName.value = data.projectName;
+          // loading.value = false;
           console.log(Response);
           // console.log(project);
         })
@@ -223,8 +286,28 @@ export default {
       item: []
     });
     const currentDate = new Date();
-    const handleChange = val => {
-      console.log(val);
+    // const handleChange = val => {
+    //   console.log("val");
+    //   console.log(val);
+    // };
+    //点击折叠面板的时候 向后台请求该项目的授权信息
+    const handleChange = () => {
+      console.log("handleChange");
+      console.log(project_id);
+      applyRequest(project_id);
+    };
+
+    const applyRequest = projectId => {
+      getApplyRequest(projectId)
+        .then(Response => {
+          console.log(Response);
+
+          //将查询出来的授权信息赋给 application 如果没有被授权则为空
+          application.info = Response.data;
+        })
+        .catch(error => {
+          console.log(error);
+        });
     };
 
     const print = projectId => {
@@ -233,17 +316,57 @@ export default {
       window.open("/info/project/export/?projectId=" + projectId);
     };
 
+    //申请打印请求
+    const applyPrint = projectId => {
+      console.log(projectId);
+      applyInfo.projectId = projectId;
+      postApplyRequest(applyInfo)
+        .then(Response => {
+          console.log(Response);
+          const msg = Response.data.msg;
+
+          if (Response.data.status == 200) {
+            root.$notify({
+              title: "成功",
+              message: msg,
+              type: "success"
+            });
+            application.info = {
+              pringtAuthorization: null,
+              printAuthorizationId: "",
+              projectId: "",
+              userId: ""
+            };
+          } else {
+            root.$notify.error({
+              title: "错误",
+              message: msg
+            });
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          root.$notify.error({
+            title: "错误",
+            message: "申请失败"
+          });
+        });
+    };
+
     onMounted(() => {
       // console.log("jjjj");
       // let projectId = { projectId: parseInt(project_id) };
-      // console.log(projectId);
+      console.log(project_id);
       getBuild(project_id);
+      getProject(project_id);
     });
     return {
       project_id,
       activeNames,
       Project,
       build_info,
+      application,
+      applyInfo,
       closeBuildInfo,
       getBuildDetail,
       loading,
@@ -255,6 +378,7 @@ export default {
       handleChange,
       currentDate,
       print,
+      applyPrint,
       projectName
     };
   }
