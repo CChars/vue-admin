@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Message } from "element-ui";
+import router from "../router/index";
 
 //创建axios  赋给变量service
 // 地址http://www.web-jshtml.cn/productApi
@@ -42,6 +43,10 @@ service.interceptors.response.use(
 
     if (response.status && response.status === 200 && data.status === 500) {
       Message.error(data.msg);
+      // router.beforeEach((to, from, next) => {
+      //   next("/login");
+      // });
+      router.push("/login");
       return Promise.reject(data);
     } else {
       return response;

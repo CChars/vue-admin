@@ -271,7 +271,10 @@
 
                   <el-row
                     class="button"
-                    v-if="application.info && application.pringtAuthorization"
+                    v-if="
+                      application.info &&
+                        application.info.pringtAuthorization === 1
+                    "
                   >
                     <el-button
                       type="primary"
@@ -283,14 +286,23 @@
 
                   <el-row
                     class="button"
-                    v-if="application.info && !application.pringtAuthorization"
+                    v-if="
+                      application.info &&
+                        application.info.pringtAuthorization === null
+                    "
                   >
                     <el-button type="primary" round disabled
                       >申请正在审核中</el-button
                     >
                   </el-row>
 
-                  <el-row class="button" v-if="!application.info">
+                  <el-row
+                    class="button"
+                    v-if="
+                      !application.info ||
+                        application.info.pringtAuthorization === 0
+                    "
+                  >
                     <el-button
                       type="primary"
                       round
@@ -403,6 +415,8 @@ export default {
 
           //将查询出来的授权信息赋给 application 如果没有被授权则为空
           application.info = Response.data;
+          console.log("application.info");
+          console.log(application.info);
         })
         .catch(error => {
           console.log(error);

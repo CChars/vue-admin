@@ -109,7 +109,7 @@
         <template slot-scope="scope">
           <el-button
             size="mini"
-            type="info"
+            type="primary"
             @click="handleLook(scope.$index, scope.row)"
             >进度</el-button
           >

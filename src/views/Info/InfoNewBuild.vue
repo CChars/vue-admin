@@ -130,11 +130,11 @@
         </el-row>
 
         <div
-          v-if="Project.buildList[0] && Project.buildList[0].project.tag == 1"
+          v-if="Project.buildList[0] && Project.buildList[0].project.tag === 1"
         >
           <el-row
             class="button111"
-            v-if="application.info && application.pringtAuthorization"
+            v-if="application.info && application.info.pringtAuthorization"
           >
             <el-button
               type="primary"
@@ -146,7 +146,7 @@
 
           <el-row
             class="button111"
-            v-if="application.info && !application.pringtAuthorization"
+            v-if="application.info && application.info.pringtAuthorization != 1"
           >
             <el-button type="primary" round disabled>申请正在审核中</el-button>
           </el-row>

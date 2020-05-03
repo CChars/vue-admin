@@ -31,6 +31,16 @@ export function getApplyRequest(projectId) {
     url: "/info/project/getApplyInfo/?projectId=" + projectId
   });
 }
+
+/**
+ * get 得到所有打印申请的具体信息
+ */
+export function getAllApplyRequest() {
+  return service.request({
+    method: "get",
+    url: "/info/project/getAllApplyInfo"
+  });
+}
 /**
  * put 更新打印请求
  */
@@ -38,5 +48,14 @@ export function updateApplyRequest(printAuthorizationId) {
   return service.request({
     method: "put",
     url: "/info/apply/review/?printAuthorizationId=" + printAuthorizationId
+  });
+}
+/**
+ * put 拒绝打印请求
+ */
+export function refuseApplyRequest(printAuthorizationId) {
+  return service.request({
+    method: "put",
+    url: "/info/apply/refuse/?printAuthorizationId=" + printAuthorizationId
   });
 }
